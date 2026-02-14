@@ -14,7 +14,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22 # עדכון לגרסה 22 כדי שיתאים ל-Capacitor החדש
 
       - name: Install dependencies
         run: npm install
@@ -24,7 +24,6 @@ jobs:
 
       - name: Initialize Capacitor Android
         run: |
-          # אם תיקיית אנדרואיד לא קיימת, ניצור אותה
           if [ ! -d "android" ]; then
             npx cap add android
           fi
