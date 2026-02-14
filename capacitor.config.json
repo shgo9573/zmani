@@ -1,0 +1,6 @@
+{
+  "appId": "com.zmani.app",
+  "appName": "ZmaniApp",
+  "webDir": "dist",
+  "bundledWebRuntime": false
+}
