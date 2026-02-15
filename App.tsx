@@ -29,77 +29,42 @@ const App: React.FC = () => {
       const saved = localStorage.getItem('hebrew_calendar_settings_v4');
       if (saved) return JSON.parse(saved);
     } catch (e) {}
-    
-    const initialTypes = ['חתונה', 'אירוסין', 'בר מצווה'];
     return {
       notificationsEnabled: false,
       defaultReminderMinutes: 60,
       themeColor: 'indigo',
-      eventTypes: initialTypes,
+      eventTypes: ['חתונה', 'אירוסין', 'בר מצווה'],
       mutedEventTypes: [],
       eventFields: [
-        { id: 'main_name', label: 'שם בעל השמחה', iconName: 'User', enabledFor: initialTypes },
-        { id: 'location', label: 'אולם / מיקום', iconName: 'MapPin', enabledFor: initialTypes },
-        { id: 'notes', label: 'הערות', iconName: 'Info', enabledFor: initialTypes }
+        { id: 'main_name', label: 'שם', iconName: 'User', enabledFor: [] },
+        { id: 'location', label: 'מקום', iconName: 'MapPin', enabledFor: [] }
       ]
     };
   });
-
-  useEffect(() => {
-    localStorage.setItem('hebrew_calendar_settings_v4', JSON.stringify(settings));
-  }, [settings]);
 
   useEffect(() => {
     const saved = localStorage.getItem('hebrew_events_v4');
     if (saved) setEvents(JSON.parse(saved));
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem('hebrew_events_v4', JSON.stringify(events));
-  }, [events]);
-
-  const handleSaveEvent = (event: CalendarEvent) => {
-    setEvents(prev => {
-      const idx = prev.findIndex(e => e.id === event.id);
-      if (idx > -1) {
-        const updated = [...prev];
-        updated[idx] = event;
-        return updated;
-      }
-      return [...prev, event];
-    });
-    setIsModalOpen(false);
-  };
-
-  const handleDeleteEvent = (id: string) => {
-    setEvents(prev => prev.filter(e => e.id !== id));
-    setIsModalOpen(false);
-  };
-
-  const themeColorKey = settings.themeColor || 'indigo';
-
   return (
-    <div className="h-screen w-full bg-slate-50 flex flex-col overflow-hidden">
-      {/* Header קטנטן */}
-      <header className="w-full bg-white border-b border-slate-100 px-2 flex items-center justify-between shrink-0 h-8">
-        <div className="flex items-center gap-1 overflow-hidden">
-          <Calendar size={12} className={`text-${themeColorKey}-600`} />
-          <h1 className="text-[11px] font-black text-slate-800 truncate">לוח אירועים</h1>
-        </div>
+    <>
+      <header className="app-header">
+        <span style={{fontSize: '11px', fontWeight: 'bold'}}>לוח אירועים</span>
         <button 
           onClick={() => {
             setSelectedDate(getTodayStr(viewingDate));
             setEditingEvent({ eventTime: '19:30', reminderMinutes: settings.defaultReminderMinutes, reminderTime: '09:00', type: settings.eventTypes[0], details: {} });
             setIsModalOpen(true);
           }}
-          className={`w-6 h-6 bg-${themeColorKey}-600 text-white rounded flex items-center justify-center`}
+          style={{background: '#4f46e5', color: 'white', padding: '2px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: 'bold', border: 'none'}}
         >
           <Plus size={14} />
         </button>
       </header>
 
-      <main className="flex-1 overflow-hidden relative">
-        <div className="absolute inset-0">
+      <main style={{flex: 1, overflow: 'hidden', position: 'relative'}}>
+        <div style={{position: 'absolute', inset: 0}}>
           {activeView === 'today' && <TodayView date={viewingDate} events={events.filter(e => e.date === getTodayStr(viewingDate))} onEventClick={(e) => { setSelectedDate(e.date); setEditingEvent(e); setIsModalOpen(true); }} onAddEvent={() => setIsModalOpen(true)} onDateChange={setViewingDate} settings={settings} />}
           {activeView === 'calendar' && <CalendarView events={events} onDateSelect={(d) => { setViewingDate(new Date(d)); setActiveView('today'); }} onAddEvent={(d) => { setSelectedDate(d); setEditingEvent({ eventTime: '19:30', reminderMinutes: settings.defaultReminderMinutes, reminderTime: '09:00', type: settings.eventTypes[0], details: {} }); setIsModalOpen(true); }} settings={settings} />}
           {activeView === 'list' && <EventsListView events={events} onEventClick={(e) => { setSelectedDate(e.date); setEditingEvent(e); setIsModalOpen(true); }} settings={settings} />}
@@ -107,23 +72,37 @@ const App: React.FC = () => {
         </div>
       </main>
 
-      {/* Nav קטנטן */}
-      <nav className="bg-white border-t border-slate-100 flex justify-around items-center shrink-0 h-10">
-        <NavButton active={activeView === 'today'} onClick={() => { setViewingDate(new Date()); setActiveView('today'); }} icon={<Home size={16} />} label="היום" themeColorKey={themeColorKey} />
-        <NavButton active={activeView === 'calendar'} onClick={() => setActiveView('calendar')} icon={<Calendar size={16} />} label="לוח" themeColorKey={themeColorKey} />
-        <NavButton active={activeView === 'list'} onClick={() => setActiveView('list')} icon={<List size={16} />} label="רשימה" themeColorKey={themeColorKey} />
-        <NavButton active={activeView === 'settings'} onClick={() => setActiveView('settings')} icon={<Settings size={16} />} label="הגדרות" themeColorKey={themeColorKey} />
+      <nav className="app-nav">
+        <NavBtn active={activeView === 'today'} onClick={() => { setViewingDate(new Date()); setActiveView('today'); }} icon={<Home size={16} />} label="היום" />
+        <NavBtn active={activeView === 'calendar'} onClick={() => setActiveView('calendar')} icon={<Calendar size={16} />} label="לוח" />
+        <NavBtn active={activeView === 'list'} onClick={() => setActiveView('list')} icon={<List size={16} />} label="רשימה" />
+        <NavBtn active={activeView === 'settings'} onClick={() => setActiveView('settings')} icon={<Settings size={16} />} label="הגדרות" />
       </nav>
 
-      <EventModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSave={handleSaveEvent} onDelete={handleDeleteEvent} initialEvent={editingEvent} selectedDate={selectedDate} settings={settings} />
-    </div>
+      <EventModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSave={(e) => {
+        setEvents(prev => {
+          const idx = prev.findIndex(ev => ev.id === e.id);
+          const updated = idx > -1 ? prev.map((ev, i) => i === idx ? e : ev) : [...prev, e];
+          localStorage.setItem('hebrew_events_v4', JSON.stringify(updated));
+          return updated;
+        });
+        setIsModalOpen(false);
+      }} onDelete={(id) => {
+        setEvents(prev => {
+          const updated = prev.filter(e => e.id !== id);
+          localStorage.setItem('hebrew_events_v4', JSON.stringify(updated));
+          return updated;
+        });
+        setIsModalOpen(false);
+      }} initialEvent={editingEvent} selectedDate={selectedDate} settings={settings} />
+    </>
   );
 };
 
-const NavButton = ({ active, onClick, icon, label, themeColorKey }: any) => (
-  <button onClick={onClick} className={`flex-1 flex flex-col items-center justify-center ${active ? `text-${themeColorKey}-600` : 'text-slate-400'}`}>
+const NavBtn = ({ active, onClick, icon, label }: any) => (
+  <button onClick={onClick} className={`nav-btn ${active ? 'active' : ''}`}>
     {icon}
-    <span className="text-[8px] font-black">{label}</span>
+    <span className="nav-text">{label}</span>
   </button>
 );
 
