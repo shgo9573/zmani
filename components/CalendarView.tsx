@@ -1,8 +1,8 @@
 
 import React, { useState, useRef } from 'react';
-import { ChevronRight, ChevronLeft, Bell } from 'lucide-react';
+import { ChevronRight, ChevronLeft } from 'lucide-react';
 import { CalendarEvent, AppSettings } from '../types';
-import { toHebrewNumeral, getHebrewMonthYear, getGregorianMonthYear, getHebrewDay, getHebrewMonthBounds } from '../utils/hebrewDateUtils';
+import { toHebrewNumeral, getHebrewMonthYear, getGregorianMonthYear, getHebrewDay, getHebrewMonthBounds, getHebrewDateParts } from '../utils/hebrewDateUtils';
 
 interface CalendarViewProps {
   events: CalendarEvent[];
@@ -12,56 +12,74 @@ interface CalendarViewProps {
 }
 
 const CalendarView: React.FC<CalendarViewProps> = ({ events, onDateSelect, onAddEvent, settings }) => {
-  const [viewDate, setViewDate] = useState(new Date());
-  const touchStart = useRef<number | null>(null);
-  const touchEnd = useRef<number | null>(null);
+  // Use noon to avoid timezone shift issues
+  const initialDate = new Date();
+  initialDate.setHours(12, 0, 0, 0);
+  const [viewDate, setViewDate] = useState(initialDate);
+  
   const timerRef = useRef<number | null>(null);
+  const startPos = useRef<{ x: number, y: number } | null>(null);
+  const isLongPressActive = useRef(false);
+
+  const { firstDay, length } = getHebrewMonthBounds(viewDate);
 
   const changeMonth = (offset: number) => {
-    const newDate = new Date(viewDate);
-    newDate.setDate(newDate.getDate() + (offset * 30));
+    const newDate = new Date(firstDay);
+    if (offset > 0) {
+      // Go to the middle of next month to ensure we land in it
+      newDate.setDate(firstDay.getDate() + length + 10);
+    } else {
+      // Go to the middle of previous month
+      newDate.setDate(firstDay.getDate() - 15);
+    }
     setViewDate(newDate);
   };
 
-  const handleTouchStart = (e: React.TouchEvent, dateStr?: string) => {
-    touchStart.current = e.targetTouches[0].clientX;
-    if (dateStr) {
-      timerRef.current = window.setTimeout(() => {
-        onAddEvent(dateStr);
-        timerRef.current = null;
-      }, 600);
-    }
+  const handlePointerDown = (dateKey: string) => (e: React.PointerEvent) => {
+    isLongPressActive.current = false;
+    startPos.current = { x: e.clientX, y: e.clientY };
+
+    timerRef.current = window.setTimeout(() => {
+      isLongPressActive.current = true;
+      if ('vibrate' in navigator) navigator.vibrate(40);
+      onAddEvent(dateKey);
+    }, 350);
   };
 
-  const handleTouchMove = (e: React.TouchEvent) => {
-    touchEnd.current = e.targetTouches[0].clientX;
+  const handlePointerUp = (dateKey: string) => (e: React.PointerEvent) => {
     if (timerRef.current) {
-      window.clearTimeout(timerRef.current);
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    if (!isLongPressActive.current) {
+      onDateSelect(dateKey);
+    }
+    isLongPressActive.current = false;
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!startPos.current || !timerRef.current) return;
+    const dx = Math.abs(e.clientX - startPos.current.x);
+    const dy = Math.abs(e.clientY - startPos.current.y);
+    if (dx > 15 || dy > 15) {
+      clearTimeout(timerRef.current);
       timerRef.current = null;
     }
   };
 
-  const handleTouchEnd = (dateStr?: string) => {
+  const handlePointerCancel = () => {
     if (timerRef.current) {
-      window.clearTimeout(timerRef.current);
-      if (dateStr) onDateSelect(dateStr);
+      clearTimeout(timerRef.current);
       timerRef.current = null;
     }
-
-    if (!touchStart.current || !touchEnd.current) return;
-    const distance = touchStart.current - touchEnd.current;
-    if (distance > 70) changeMonth(1);
-    if (distance < -70) changeMonth(-1);
-
-    touchStart.current = null;
-    touchEnd.current = null;
   };
 
-  const generateHebrewMonthDays = () => {
-    const { firstDay, length } = getHebrewMonthBounds(viewDate);
+  const generateDays = () => {
     const days = [];
-    const startPadding = firstDay.getDay();
+    // Start padding based on the day of week the 1st of Hebrew month falls on
+    const startPadding = firstDay.getDay(); 
     for (let i = 0; i < startPadding; i++) days.push(null);
+    
     for (let i = 0; i < length; i++) {
       const current = new Date(firstDay);
       current.setDate(firstDay.getDate() + i);
@@ -70,7 +88,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, onDateSelect, onAdd
     return days;
   };
 
-  const days = generateHebrewMonthDays();
+  const days = generateDays();
   const weekDays = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'];
 
   const formatDate = (date: Date) => {
@@ -82,86 +100,73 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, onDateSelect, onAdd
 
   const todayStr = formatDate(new Date());
 
-  const getPrimaryDetail = (event: CalendarEvent) => {
-    const firstFieldId = settings.eventFields[0]?.id;
-    return event.details[firstFieldId] || 'אירוע';
-  };
-
   return (
-    <div className="bg-white w-full min-h-[calc(100vh-160px)] flex flex-col select-none">
-      {/* כותרת החודש - רחבה ויוקרתית */}
-      <div className="w-full p-6 bg-gradient-to-r from-indigo-600 to-indigo-800 text-white shadow-lg">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button onClick={() => changeMonth(1)} className="p-2.5 bg-white/10 hover:bg-white/20 rounded-2xl transition-all active:scale-90">
-              <ChevronRight size={28} />
-            </button>
-            <h2 className="text-3xl font-black tracking-tight drop-shadow-md">{getHebrewMonthYear(viewDate)}</h2>
-            <button onClick={() => changeMonth(-1)} className="p-2.5 bg-white/10 hover:bg-white/20 rounded-2xl transition-all active:scale-90">
-              <ChevronLeft size={28} />
-            </button>
-          </div>
-          <div className="text-left">
-            <span className="text-sm font-black opacity-90">{getGregorianMonthYear(viewDate)}</span>
-          </div>
+    <div className="bg-white w-full h-full flex flex-col select-none overflow-hidden">
+      {/* Month Header */}
+      <div className="w-full p-1 bg-indigo-600 text-white flex items-center justify-between h-9 shrink-0">
+        <div className="flex items-center gap-1">
+          <button onClick={() => changeMonth(1)} className="p-1 active:bg-white/20 rounded"><ChevronRight size={16} /></button>
+          <h2 className="text-xs font-black min-w-[80px] text-center">{getHebrewMonthYear(viewDate)}</h2>
+          <button onClick={() => changeMonth(-1)} className="p-1 active:bg-white/20 rounded"><ChevronLeft size={16} /></button>
         </div>
-        <div className="mt-3 text-[11px] font-black text-indigo-100 flex items-center gap-2">
-          <div className="w-2.5 h-2.5 rounded-full bg-white shadow-[0_0_8px_white] animate-pulse"></div>
-          לחיצה ארוכה על תאריך להוספה מהירה
-        </div>
+        <span className="text-[7px] font-bold opacity-60 ml-2">{getGregorianMonthYear(viewDate)}</span>
       </div>
 
-      {/* ימי השבוע */}
-      <div className="grid grid-cols-7 border-b border-slate-100 bg-slate-50">
+      {/* Weekdays */}
+      <div className="calendar-grid bg-slate-50 border-b border-slate-100 shrink-0">
         {weekDays.map(day => (
-          <div key={day} className="py-3 text-center text-xs font-black text-slate-400 uppercase">
-            יום {day}'
+          <div key={day} className="py-0.5 text-center text-[8px] font-black text-slate-400">
+            {day}'
           </div>
         ))}
       </div>
 
-      {/* רשת התאריכים - מורחבת למקסימום */}
-      <div className="grid grid-cols-7 flex-1">
+      {/* Grid */}
+      <div className="calendar-grid flex-1 border-r border-slate-50 overflow-hidden">
         {days.map((day, idx) => {
-          if (!day) return <div key={`empty-${idx}`} className="bg-slate-50/40 border-l border-b border-slate-100/50" />;
+          if (!day) return <div key={`empty-${idx}`} className="border-l border-b border-slate-50 bg-slate-50/10" />;
+          
           const dateKey = formatDate(day);
           const dayEvents = events.filter(e => e.date === dateKey);
           const isToday = todayStr === dateKey;
-          const hebDay = getHebrewDay(day);
+          const hebDayNum = getHebrewDay(day);
 
           return (
             <div
               key={dateKey}
-              onTouchStart={(e) => handleTouchStart(e, dateKey)}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={() => handleTouchEnd(dateKey)}
-              className={`border-l border-b border-slate-100 p-2 relative cursor-pointer min-h-[85px] sm:min-h-[120px] transition-all group ${isToday ? 'bg-indigo-50/60' : 'hover:bg-slate-50 active:bg-indigo-50/30'}`}
+              onPointerDown={handlePointerDown(dateKey)}
+              onPointerUp={handlePointerUp(dateKey)}
+              onPointerMove={handlePointerMove}
+              onPointerCancel={handlePointerCancel}
+              onContextMenu={(e) => e.preventDefault()}
+              className={`date-cell border-l border-b border-slate-100 p-1 flex flex-col justify-between transition-colors ${isToday ? 'bg-indigo-50/70 ring-1 ring-inset ring-indigo-200' : 'bg-white active:bg-slate-50'}`}
             >
-              <div className="flex items-start justify-start relative z-10">
-                <span className={`text-xl sm:text-2xl font-black leading-tight ${isToday ? 'text-indigo-600' : 'text-slate-800'}`}>
-                  {toHebrewNumeral(hebDay)}
-                </span>
-              </div>
-
-              {/* תאריך לועזי - פינה שמאלית תחתונה */}
-              <div className="absolute bottom-2 left-2 text-[11px] font-black text-slate-300 group-hover:text-indigo-300 pointer-events-none transition-colors">
-                {day.getDate()}
-              </div>
-
-              {/* אירועים בתוך המשבצת */}
-              <div className="mt-1.5 space-y-1">
-                {dayEvents.slice(0, 3).map(event => (
-                  <div key={event.id} className="bg-amber-100/80 text-amber-900 text-[9px] sm:text-[11px] px-1.5 py-0.5 rounded border border-amber-200 truncate font-black leading-none shadow-sm">
-                    {getPrimaryDetail(event)}
-                  </div>
-                ))}
-                {dayEvents.length > 3 && (
-                  <div className="text-[9px] text-indigo-500 font-black text-center">+ עוד {dayEvents.length - 3}</div>
-                )}
+              <span className={`text-[13px] font-black leading-tight ${isToday ? 'text-indigo-700' : 'text-slate-800'}`}>
+                {toHebrewNumeral(hebDayNum)}
+              </span>
+              
+              <div className="flex justify-between items-end w-full">
+                <div className="flex flex-wrap gap-0.5 mb-0.5 max-w-[70%]">
+                  {dayEvents.slice(0, 4).map(e => (
+                    <div 
+                      key={e.id} 
+                      className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-sm border border-white" 
+                      title={e.type}
+                    />
+                  ))}
+                  {dayEvents.length > 4 && (
+                    <span className="text-[6px] font-black text-slate-400 self-center leading-none">+{dayEvents.length - 4}</span>
+                  )}
+                </div>
+                <span className="text-[7px] text-slate-300 font-bold leading-none shrink-0">{day.getDate()}</span>
               </div>
             </div>
           );
         })}
+      </div>
+      
+      <div className="p-0.5 bg-slate-50 text-center text-[7px] font-bold text-slate-400 border-t shrink-0 h-4">
+        לחיצה ארוכה (350ms) להוספה • לחיצה קצרה לצפייה
       </div>
     </div>
   );

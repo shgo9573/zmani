@@ -23,6 +23,7 @@ export interface AppSettings {
   themeColor: string;
   eventTypes: string[];
   eventFields: FieldConfig[];
+  mutedEventTypes: string[]; // רשימת סוגי אירועים שהם ללא צילצול
 }
 
 export type ViewType = 'calendar' | 'today' | 'list' | 'settings';

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { X, Save, Trash2, Bell, User, MapPin, Music, Info, HelpCircle, Calendar as CalendarIcon, Clock, Star } from 'lucide-react';
+import { X, Save, Trash2, Bell, BellOff, User, MapPin, Music, Info, HelpCircle, Calendar as CalendarIcon, Clock, Star } from 'lucide-react';
 import { CalendarEvent, AppSettings } from '../types';
 import { REMINDER_OPTIONS } from '../constants';
 import { getHebrewDateInfo } from '../utils/hebrewDateUtils';
@@ -68,6 +68,8 @@ const EventModal: React.FC<EventModalProps> = ({
   );
 
   const isRelative = formData.reminderMinutes === 15 || formData.reminderMinutes === 60 || formData.reminderMinutes === 120;
+  
+  const isSelectedTypeMuted = settings.mutedEventTypes.includes(formData.type || '');
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4">
@@ -83,19 +85,30 @@ const EventModal: React.FC<EventModalProps> = ({
         <form onSubmit={handleSubmit} className="p-3 sm:p-4 overflow-y-auto space-y-3">
           {/* סוג אירוע */}
           <div>
-            <label className="text-[9px] font-black text-slate-400 block mb-1">סוג אירוע:</label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-[9px] font-black text-slate-400 block">סוג אירוע:</label>
+              {isSelectedTypeMuted && (
+                <span className="text-[8px] font-black text-amber-600 flex items-center gap-1">
+                  <BellOff size={10} /> סוג זה ללא צילצול
+                </span>
+              )}
+            </div>
             <div className="flex flex-wrap gap-1">
-              {settings.eventTypes.map((type) => (
-                <button
-                  key={type} type="button"
-                  onClick={() => setFormData({ ...formData, type })}
-                  className={`px-2 py-1 rounded border text-[10px] font-bold transition-all ${
-                    formData.type === type ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 text-slate-500 border-slate-200'
-                  }`}
-                >
-                  {type}
-                </button>
-              ))}
+              {settings.eventTypes.map((type) => {
+                const isTypeMuted = settings.mutedEventTypes.includes(type);
+                return (
+                  <button
+                    key={type} type="button"
+                    onClick={() => setFormData({ ...formData, type })}
+                    className={`px-2 py-1 rounded border text-[10px] font-bold transition-all flex items-center gap-1 ${
+                      formData.type === type ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 text-slate-500 border-slate-200'
+                    }`}
+                  >
+                    {type}
+                    {isTypeMuted && <BellOff size={10} className={formData.type === type ? 'text-white/70' : 'text-slate-300'} />}
+                  </button>
+                );
+              })}
             </div>
           </div>
 

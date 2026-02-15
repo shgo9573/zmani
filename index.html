@@ -3,40 +3,52 @@
 <html lang="he" dir="rtl">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>לוח אירועים עברי</title>
-    <!-- Tailwind CDN - נשמר כתמיכה למכשירים עם אינטרנט -->
-    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-      /* CSS בסיסי למקרה שאין אינטרנט וה-Tailwind לא נטען */
+      * {
+        -webkit-tap-highlight-color: transparent;
+        -webkit-touch-callout: none !important;
+        -webkit-user-select: none !important;
+        user-select: none !important;
+        box-sizing: border-box;
+      }
       body {
-        font-family: sans-serif;
+        font-family: system-ui, -apple-system, sans-serif;
         background-color: #f8fafc;
         margin: 0;
         padding: 0;
         direction: rtl;
-        -webkit-user-select: none;
+        overflow: hidden;
       }
-      #root { min-height: 100vh; display: flex; flex-direction: column; }
-      
-      /* התאמה מיוחדת למסכי 2.8 אינץ' (שיאומי) */
-      @media (max-width: 320px) {
-        body { font-size: 14px; }
-        .p-4 { padding: 8px !important; }
-        .text-2xl { font-size: 1.25rem !important; }
-        .text-xl { font-size: 1.1rem !important; }
-        nav span { display: none; }
+      #root { 
+        height: 100vh; 
+        display: flex; 
+        flex-direction: column; 
       }
-      
-      /* מניעת גלילה מיותרת */
-      .no-scroll { overflow: hidden; }
+      .calendar-grid {
+        display: grid !important;
+        grid-template-columns: repeat(7, 1fr) !important;
+        width: 100% !important;
+      }
+      .date-cell {
+        min-height: 44px; /* גובה חסכוני */
+        position: relative;
+        touch-action: none; /* מונע גלילה בזמן לחיצה על התא */
+      }
+      /* מניעת בחירה בטפסים */
+      input, select, textarea {
+        -webkit-user-select: auto !important;
+        user-select: auto !important;
+      }
     </style>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script type="importmap">
     {
       "imports": {
+        "react": "https://esm.sh/react@^19.2.4",
         "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
         "react/": "https://esm.sh/react@^19.2.4/",
-        "react": "https://esm.sh/react@^19.2.4",
         "lucide-react": "https://esm.sh/lucide-react@^0.564.0"
       }
     }

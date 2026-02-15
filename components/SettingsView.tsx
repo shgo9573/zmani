@@ -1,6 +1,6 @@
 
 import React, { useRef, useState } from 'react';
-import { Bell, Palette, Database, Trash2, Upload, Plus, X, Layers, Layout, User, MapPin, Music, Info, HelpCircle, Check } from 'lucide-react';
+import { Bell, BellOff, Palette, Database, Trash2, Upload, Plus, X, Layers, Layout, User, MapPin, Music, Info, HelpCircle, Check } from 'lucide-react';
 import { AppSettings, CalendarEvent, FieldConfig } from '../types';
 
 interface SettingsViewProps {
@@ -37,12 +37,21 @@ const SettingsView: React.FC<SettingsViewProps> = ({ settings, onUpdateSettings,
   const removeEventType = (type: string) => {
     if (settings.eventTypes.length <= 1) return;
     const newTypes = settings.eventTypes.filter(t => t !== type);
+    const newMuted = settings.mutedEventTypes.filter(t => t !== type);
     // עדכון כל השדות שהכילו את הסוג הזה
     const newFields = settings.eventFields.map(f => ({
       ...f,
       enabledFor: f.enabledFor.filter(t => t !== type)
     }));
-    onUpdateSettings({ ...settings, eventTypes: newTypes, eventFields: newFields });
+    onUpdateSettings({ ...settings, eventTypes: newTypes, eventFields: newFields, mutedEventTypes: newMuted });
+  };
+
+  const toggleMuteType = (type: string) => {
+    const isMuted = settings.mutedEventTypes.includes(type);
+    const newMuted = isMuted 
+      ? settings.mutedEventTypes.filter(t => t !== type)
+      : [...settings.mutedEventTypes, type];
+    onUpdateSettings({ ...settings, mutedEventTypes: newMuted });
   };
 
   const addField = () => {
@@ -93,15 +102,28 @@ const SettingsView: React.FC<SettingsViewProps> = ({ settings, onUpdateSettings,
         <h3 className="text-base font-black text-slate-800 mb-3 flex items-center gap-2">
           <Layers size={18} className="text-indigo-600" /> סוגי אירועים
         </h3>
-        <div className="flex flex-wrap gap-1.5 mb-3">
-          {settings.eventTypes.map(type => (
-            <div key={type} className="flex items-center gap-1 px-2 py-1 bg-slate-50 rounded-lg border border-slate-100">
-              <span className="font-bold text-xs text-slate-700">{type}</span>
-              <button onClick={() => removeEventType(type)} className="text-red-400 p-0.5">
-                <X size={12} />
-              </button>
-            </div>
-          ))}
+        <div className="flex flex-col gap-1.5 mb-3">
+          {settings.eventTypes.map(type => {
+            const isMuted = settings.mutedEventTypes.includes(type);
+            return (
+              <div key={type} className="flex items-center justify-between px-3 py-2 bg-slate-50 rounded-xl border border-slate-100 group transition-all">
+                <span className="font-bold text-xs text-slate-700">{type}</span>
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={() => toggleMuteType(type)} 
+                    className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-black transition-all ${isMuted ? 'bg-slate-200 text-slate-400' : 'bg-indigo-100 text-indigo-600'}`}
+                    title={isMuted ? "ללא צילצול" : "עם צילצול"}
+                  >
+                    {isMuted ? <BellOff size={12} /> : <Bell size={12} />}
+                    {isMuted ? 'ללא צילצול' : 'עם צילצול'}
+                  </button>
+                  <button onClick={() => removeEventType(type)} className="text-red-400 p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <X size={14} />
+                  </button>
+                </div>
+              </div>
+            );
+          })}
         </div>
         <div className="flex gap-2">
           <input 
