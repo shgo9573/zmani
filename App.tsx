@@ -42,6 +42,11 @@ const App: React.FC = () => {
     };
   });
 
+  // שמירת הגדרות בכל שינוי
+  useEffect(() => {
+    localStorage.setItem('hebrew_calendar_settings_v4', JSON.stringify(settings));
+  }, [settings]);
+
   useEffect(() => {
     const saved = localStorage.getItem('hebrew_events_v4');
     if (saved) setEvents(JSON.parse(saved));
