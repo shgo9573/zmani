@@ -12,7 +12,6 @@ interface CalendarViewProps {
 }
 
 const CalendarView: React.FC<CalendarViewProps> = ({ events, onDateSelect, onAddEvent, settings }) => {
-  // Use noon to avoid timezone shift issues
   const initialDate = new Date();
   initialDate.setHours(12, 0, 0, 0);
   const [viewDate, setViewDate] = useState(initialDate);
@@ -26,10 +25,8 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, onDateSelect, onAdd
   const changeMonth = (offset: number) => {
     const newDate = new Date(firstDay);
     if (offset > 0) {
-      // Go to the middle of next month to ensure we land in it
       newDate.setDate(firstDay.getDate() + length + 10);
     } else {
-      // Go to the middle of previous month
       newDate.setDate(firstDay.getDate() - 15);
     }
     setViewDate(newDate);
@@ -38,7 +35,6 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, onDateSelect, onAdd
   const handlePointerDown = (dateKey: string) => (e: React.PointerEvent) => {
     isLongPressActive.current = false;
     startPos.current = { x: e.clientX, y: e.clientY };
-
     timerRef.current = window.setTimeout(() => {
       isLongPressActive.current = true;
       if ('vibrate' in navigator) navigator.vibrate(40);
@@ -67,28 +63,18 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, onDateSelect, onAdd
     }
   };
 
-  const handlePointerCancel = () => {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
-  };
-
-  const generateDays = () => {
-    const days = [];
-    // Start padding based on the day of week the 1st of Hebrew month falls on
+  const days = (() => {
+    const d = [];
     const startPadding = firstDay.getDay(); 
-    for (let i = 0; i < startPadding; i++) days.push(null);
-    
+    for (let i = 0; i < startPadding; i++) d.push(null);
     for (let i = 0; i < length; i++) {
       const current = new Date(firstDay);
       current.setDate(firstDay.getDate() + i);
-      days.push(current);
+      d.push(current);
     }
-    return days;
-  };
+    return d;
+  })();
 
-  const days = generateDays();
   const weekDays = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'];
 
   const formatDate = (date: Date) => {
@@ -102,29 +88,47 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, onDateSelect, onAdd
 
   return (
     <div className="bg-white w-full h-full flex flex-col select-none overflow-hidden">
-      {/* Month Header */}
-      <div className="w-full p-1 bg-indigo-600 text-white flex items-center justify-between h-9 shrink-0">
-        <div className="flex items-center gap-1">
-          <button onClick={() => changeMonth(1)} className="p-1 active:bg-white/20 rounded"><ChevronRight size={16} /></button>
-          <h2 className="text-xs font-black min-w-[80px] text-center">{getHebrewMonthYear(viewDate)}</h2>
-          <button onClick={() => changeMonth(-1)} className="p-1 active:bg-white/20 rounded"><ChevronLeft size={16} /></button>
+      {/* כותרת חודש - כפתורים ענקיים ונגישים */}
+      <div className="w-full px-4 bg-indigo-600 text-white flex items-center justify-between h-16 shrink-0 shadow-lg relative z-20">
+        <button 
+          onClick={() => changeMonth(1)} 
+          className="nav-btn active:scale-95 transition-transform"
+          aria-label="חודש הבא"
+        >
+          <ChevronRight size={32} />
+        </button>
+
+        <div className="text-center overflow-hidden">
+          <h2 className="text-lg font-black truncate leading-tight">
+            {getHebrewMonthYear(viewDate)}
+          </h2>
+          <div className="text-[10px] font-bold opacity-80">
+            {getGregorianMonthYear(viewDate)}
+          </div>
         </div>
-        <span className="text-[7px] font-bold opacity-60 ml-2">{getGregorianMonthYear(viewDate)}</span>
+
+        <button 
+          onClick={() => changeMonth(-1)} 
+          className="nav-btn active:scale-95 transition-transform"
+          aria-label="חודש קודם"
+        >
+          <ChevronLeft size={32} />
+        </button>
       </div>
 
-      {/* Weekdays */}
+      {/* ימי השבוע */}
       <div className="calendar-grid bg-slate-50 border-b border-slate-100 shrink-0">
         {weekDays.map(day => (
-          <div key={day} className="py-0.5 text-center text-[8px] font-black text-slate-400">
+          <div key={day} className="py-2 text-center text-[11px] font-black text-slate-400">
             {day}'
           </div>
         ))}
       </div>
 
-      {/* Grid */}
-      <div className="calendar-grid flex-1 border-r border-slate-50 overflow-hidden">
+      {/* גריד התאריכים */}
+      <div className="calendar-grid flex-1 overflow-hidden border-r border-slate-100 bg-slate-200 gap-[0.5px]">
         {days.map((day, idx) => {
-          if (!day) return <div key={`empty-${idx}`} className="border-l border-b border-slate-50 bg-slate-50/10" />;
+          if (!day) return <div key={`empty-${idx}`} className="bg-slate-50/50" />;
           
           const dateKey = formatDate(day);
           const dayEvents = events.filter(e => e.date === dateKey);
@@ -137,36 +141,28 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, onDateSelect, onAdd
               onPointerDown={handlePointerDown(dateKey)}
               onPointerUp={handlePointerUp(dateKey)}
               onPointerMove={handlePointerMove}
-              onPointerCancel={handlePointerCancel}
-              onContextMenu={(e) => e.preventDefault()}
-              className={`date-cell border-l border-b border-slate-100 p-1 flex flex-col justify-between transition-colors ${isToday ? 'bg-indigo-50/70 ring-1 ring-inset ring-indigo-200' : 'bg-white active:bg-slate-50'}`}
+              onPointerCancel={() => { if(timerRef.current) clearTimeout(timerRef.current); }}
+              className={`date-cell p-1 flex flex-col justify-between transition-colors ${isToday ? 'bg-indigo-50' : 'bg-white active:bg-slate-100'}`}
             >
-              <span className={`text-[13px] font-black leading-tight ${isToday ? 'text-indigo-700' : 'text-slate-800'}`}>
+              <span className={`text-[15px] font-black leading-none ${isToday ? 'text-indigo-700' : 'text-slate-800'}`}>
                 {toHebrewNumeral(hebDayNum)}
               </span>
               
               <div className="flex justify-between items-end w-full">
-                <div className="flex flex-wrap gap-0.5 mb-0.5 max-w-[70%]">
-                  {dayEvents.slice(0, 4).map(e => (
-                    <div 
-                      key={e.id} 
-                      className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-sm border border-white" 
-                      title={e.type}
-                    />
+                <div className="flex flex-wrap gap-0.5 max-w-[70%]">
+                  {dayEvents.slice(0, 3).map(e => (
+                    <div key={e.id} className="w-2.5 h-2.5 rounded-full bg-amber-500 border border-white shadow-sm" />
                   ))}
-                  {dayEvents.length > 4 && (
-                    <span className="text-[6px] font-black text-slate-400 self-center leading-none">+{dayEvents.length - 4}</span>
-                  )}
                 </div>
-                <span className="text-[7px] text-slate-300 font-bold leading-none shrink-0">{day.getDate()}</span>
+                <span className="text-[9px] text-slate-300 font-bold leading-none">{day.getDate()}</span>
               </div>
             </div>
           );
         })}
       </div>
       
-      <div className="p-0.5 bg-slate-50 text-center text-[7px] font-bold text-slate-400 border-t shrink-0 h-4">
-        לחיצה ארוכה (350ms) להוספה • לחיצה קצרה לצפייה
+      <div className="p-1.5 bg-slate-100 text-center text-[9px] font-black text-slate-500 border-t shrink-0">
+        לחיצה ארוכה להוספה • לחיצה קצרה לצפייה
       </div>
     </div>
   );
