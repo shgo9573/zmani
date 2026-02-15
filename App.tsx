@@ -113,9 +113,9 @@ const App: React.FC = () => {
 
       <nav className="bg-white border-t border-slate-100 py-0.5 flex justify-around items-center z-50 shrink-0 h-11">
         <NavButton active={activeView === 'today'} onClick={() => { setViewingDate(new Date()); setActiveView('today'); }} icon={<Home size={16} />} label="היום" themeColorKey={themeColorKey} />
-        <NavButton active={activeView === 'calendar'} onClick={() => setActiveView('calendar'} icon={<Calendar size={16} />} label="לוח" themeColorKey={themeColorKey} />
-        <NavButton active={activeView === 'list'} onClick={() => setActiveView('list'} icon={<List size={16} />} label="רשימה" themeColorKey={themeColorKey} />
-        <NavButton active={activeView === 'settings'} onClick={() => setActiveView('settings'} icon={<Settings size={16} />} label="הגדרות" themeColorKey={themeColorKey} />
+        <NavButton active={activeView === 'calendar'} onClick={() => setActiveView('calendar')} icon={<Calendar size={16} />} label="לוח" themeColorKey={themeColorKey} />
+        <NavButton active={activeView === 'list'} onClick={() => setActiveView('list')} icon={<List size={16} />} label="רשימה" themeColorKey={themeColorKey} />
+        <NavButton active={activeView === 'settings'} onClick={() => setActiveView('settings')} icon={<Settings size={16} />} label="הגדרות" themeColorKey={themeColorKey} />
       </nav>
 
       <EventModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSave={handleSaveEvent} onDelete={handleDeleteEvent} initialEvent={editingEvent} selectedDate={selectedDate} settings={settings} />
