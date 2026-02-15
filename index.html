@@ -60,7 +60,12 @@
       .view-container {
         height: 100%;
         width: 100%;
-        overflow-y: auto;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .scrollable {
+        overflow-y: auto !important;
         -webkit-overflow-scrolling: touch;
       }
 
@@ -96,16 +101,15 @@
       .nav-text { font-size: 12px; }
 
       /* לוח שנה */
-      .cal-header { height: 60px; background: var(--primary); color: white; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; }
+      .cal-header { height: 60px; background: var(--primary); color: white; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; flex-shrink: 0; }
       .calendar-grid { 
         display: grid; 
         grid-template-columns: repeat(7, 1fr); 
         background: #e2e8f0; 
         gap: 1px; 
-        flex: 1; 
         width: 100%;
       }
-      .date-cell { background: white; min-height: 80px; display: flex; flex-direction: column; padding: 4px; position: relative; }
+      .date-cell { background: white; min-height: 110px; display: flex; flex-direction: column; padding: 4px; position: relative; }
       .heb-day { font-size: 16px; font-weight: 800; text-align: center; margin-top: 4px; }
       .greg-day { font-size: 11px; color: var(--muted); position: absolute; bottom: 4px; left: 4px; }
       .dot { width: 6px; height: 6px; background: var(--primary); border-radius: 50%; align-self: center; margin-top: auto; margin-bottom: 20px; }

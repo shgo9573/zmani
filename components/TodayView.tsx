@@ -37,21 +37,20 @@ const TodayView: React.FC<TodayViewProps> = ({
 
   return (
     <div className="h-full flex flex-col bg-white overflow-hidden">
-      {/* כותרת דחוסה */}
-      {/* Fix: Changed justifyBetween to justifyContent as justifyBetween is not a valid React CSS property */}
-      <div style={{background: '#4f46e5', padding: '8px 4px', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
-        <button onClick={() => navigateDate(1)} className="p-1"><ChevronRight size={24} /></button>
+      {/* כותרת דחוסה - כיווני ניווט מוחלפים לפי בקשת המשתמש */}
+      <div style={{background: '#4f46e5', padding: '8px 4px', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0}}>
+        <button onClick={() => navigateDate(-1)} style={{background: 'none', border: 'none', color: 'white', padding: '4px', cursor: 'pointer'}}><ChevronRight size={24} /></button>
         <div style={{textAlign: 'center'}}>
           <h2 style={{fontSize: '14px', fontWeight: '900', lineHeight: '1'}}>{hebrewDateStr}</h2>
           <p style={{fontSize: '9px', opacity: 0.8}}>{gregorianDateStr}</p>
         </div>
-        <button onClick={() => navigateDate(-1)} className="p-1"><ChevronLeft size={24} /></button>
+        <button onClick={() => navigateDate(1)} style={{background: 'none', border: 'none', color: 'white', padding: '4px', cursor: 'pointer'}}><ChevronLeft size={24} /></button>
       </div>
 
-      <div style={{flex: 1, overflowY: 'auto', padding: '8px'}}>
+      <div className="scrollable" style={{flex: 1, padding: '8px'}}>
         <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px'}}>
           <span style={{fontSize: '11px', fontWeight: '900'}}>אירועים ({events.length})</span>
-          <button onClick={onAddEvent} style={{fontSize: '9px', fontWeight: 'bold', background: '#eef2ff', color: '#4f46e5', padding: '2px 8px', borderRadius: '4px'}}>+ הוסף</button>
+          <button onClick={onAddEvent} style={{fontSize: '9px', fontWeight: 'bold', background: '#eef2ff', color: '#4f46e5', padding: '2px 8px', borderRadius: '4px', border: 'none', cursor: 'pointer'}}>+ הוסף</button>
         </div>
         
         {events.length > 0 ? (
@@ -60,7 +59,7 @@ const TodayView: React.FC<TodayViewProps> = ({
               <div 
                 key={event.id} 
                 onClick={() => onEventClick(event)} 
-                style={{background: '#f8fafc', padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0'}}
+                style={{background: '#f8fafc', padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0', cursor: 'pointer'}}
               >
                 <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '2px'}}>
                   <span style={{fontSize: '9px', fontWeight: '900', color: '#4f46e5'}}>{event.type}</span>

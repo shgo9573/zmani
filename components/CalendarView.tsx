@@ -57,7 +57,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, onDateSelect, onAdd
   return (
     <div style={{height: '100%', width: '100%', display: 'flex', flexDirection: 'column', background: 'white'}}>
       <div className="cal-header">
-        <button onClick={() => changeMonth(1)} className="cal-btn">
+        <button onClick={() => changeMonth(-1)} style={{background: 'none', border: 'none', color: 'white', padding: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center'}}>
           <ChevronRight size={28} strokeWidth={2.5} />
         </button>
 
@@ -66,54 +66,56 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, onDateSelect, onAdd
           <div style={{fontSize: '11px', opacity: 0.8}}>{getGregorianMonthYear(viewDate)}</div>
         </div>
 
-        <button onClick={() => changeMonth(-1)} className="cal-btn">
+        <button onClick={() => changeMonth(1)} style={{background: 'none', border: 'none', color: 'white', padding: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center'}}>
           <ChevronLeft size={28} strokeWidth={2.5} />
         </button>
       </div>
 
-      <div style={{display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', height: '36px', alignItems: 'center'}}>
+      <div style={{display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', height: '36px', alignItems: 'center', flexShrink: 0}}>
         {weekDays.map(day => (
           <div key={day} style={{textAlign: 'center', fontSize: '14px', fontWeight: 'bold', color: '#64748b'}}>{day}</div>
         ))}
       </div>
 
-      <div className="calendar-grid">
-        {days.map((day, idx) => {
-          if (!day) return <div key={`empty-${idx}`} style={{background: '#fcfcfc'}} />;
-          const dateKey = formatDate(day);
-          const hasEvents = events.some(e => e.date === dateKey);
-          const isToday = todayStr === dateKey;
-          const hebDayNum = getHebrewDay(day);
+      <div className="view-container">
+        <div className="calendar-grid">
+          {days.map((day, idx) => {
+            if (!day) return <div key={`empty-${idx}`} style={{background: '#fcfcfc'}} />;
+            const dateKey = formatDate(day);
+            const hasEvents = events.some(e => e.date === dateKey);
+            const isToday = todayStr === dateKey;
+            const hebDayNum = getHebrewDay(day);
 
-          return (
-            <div
-              key={dateKey}
-              onClick={() => onDateSelect(dateKey)}
-              onPointerDown={(e) => {
-                startPos.current = { x: e.clientX, y: e.clientY };
-                timerRef.current = window.setTimeout(() => {
-                  if ('vibrate' in navigator) navigator.vibrate(20);
-                  onAddEvent(dateKey);
-                }, 550);
-              }}
-              onPointerUp={() => { if(timerRef.current) clearTimeout(timerRef.current); }}
-              onPointerMove={(e) => {
-                if (startPos.current && timerRef.current) {
-                  const dist = Math.sqrt(Math.pow(e.clientX - startPos.current.x, 2) + Math.pow(e.clientY - startPos.current.y, 2));
-                  if (dist > 10) clearTimeout(timerRef.current);
-                }
-              }}
-              className="date-cell"
-              style={isToday ? {background: '#f0f4ff'} : {}}
-            >
-              <span className="heb-day" style={isToday ? {color: '#4f46e5'} : {}}>
-                {toHebrewNumeral(hebDayNum)}
-              </span>
-              {hasEvents && <div className="dot" />}
-              <span className="greg-day">{day.getDate()}</span>
-            </div>
-          );
-        })}
+            return (
+              <div
+                key={dateKey}
+                onClick={() => onDateSelect(dateKey)}
+                onPointerDown={(e) => {
+                  startPos.current = { x: e.clientX, y: e.clientY };
+                  timerRef.current = window.setTimeout(() => {
+                    if ('vibrate' in navigator) navigator.vibrate(20);
+                    onAddEvent(dateKey);
+                  }, 550);
+                }}
+                onPointerUp={() => { if(timerRef.current) clearTimeout(timerRef.current); }}
+                onPointerMove={(e) => {
+                  if (startPos.current && timerRef.current) {
+                    const dist = Math.sqrt(Math.pow(e.clientX - startPos.current.x, 2) + Math.pow(e.clientY - startPos.current.y, 2));
+                    if (dist > 10) clearTimeout(timerRef.current);
+                  }
+                }}
+                className="date-cell"
+                style={isToday ? {background: '#f0f4ff'} : {}}
+              >
+                <span className="heb-day" style={isToday ? {color: '#4f46e5'} : {}}>
+                  {toHebrewNumeral(hebDayNum)}
+                </span>
+                {hasEvents && <div className="dot" />}
+                <span className="greg-day">{day.getDate()}</span>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
