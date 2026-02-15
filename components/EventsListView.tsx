@@ -24,9 +24,9 @@ const EventsListView: React.FC<EventsListViewProps> = ({ events, onEventClick, s
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
   return (
-    <div className="h-full flex flex-col" style={{background: '#f8fafc'}}>
+    <div className="h-full flex flex-col" style={{background: '#f8fafc', overflow: 'hidden'}}>
       {/* חיפוש מקובע למעלה */}
-      <div style={{padding: '15px', background: 'white', borderBottom: '1px solid #e2e8f0', zIndex: 5}}>
+      <div style={{padding: '15px', background: 'white', borderBottom: '1px solid #e2e8f0', flexShrink: 0}}>
         <div style={{position: 'relative', width: '100%'}}>
           <Search style={{position: 'absolute', right: '14px', top: '14px', color: '#94a3b8'}} size={22} />
           <input
@@ -40,9 +40,9 @@ const EventsListView: React.FC<EventsListViewProps> = ({ events, onEventClick, s
       </div>
 
       {/* אזור נגלל */}
-      <div className="scrollable" style={{flex: 1, padding: '15px'}}>
+      <div className="scrollable" style={{flex: 1, padding: '15px', minHeight: 0}}>
         {filteredEvents.length > 0 ? (
-          <div style={{display: 'flex', flexDirection: 'column', gap: '12px', paddingBottom: '20px'}}>
+          <div style={{display: 'flex', flexDirection: 'column', gap: '12px', paddingBottom: '40px'}}>
             {filteredEvents.map((event) => {
               const name = event.details[settings.eventFields[0]?.id] || 'ללא שם';
               const location = event.details[settings.eventFields[1]?.id];
@@ -80,7 +80,7 @@ const EventsListView: React.FC<EventsListViewProps> = ({ events, onEventClick, s
           <div style={{textAlign: 'center', padding: '60px 20px', color: '#94a3b8'}}>
             <Filter size={50} style={{margin: '0 auto 15px', opacity: 0.2}} />
             <p style={{fontSize: '16px', fontWeight: 'bold'}}>לא נמצאו אירועים</p>
-            <button onClick={() => setSearchTerm('')} style={{marginTop: '10px', color: '#4f46e5', fontSize: '14px', fontWeight: 'bold'}}>הצג הכל</button>
+            <button onClick={() => setSearchTerm('')} style={{marginTop: '10px', color: '#4f46e5', fontSize: '14px', fontWeight: 'bold', background: 'none', border: 'none', cursor: 'pointer'}}>הצג הכל</button>
           </div>
         )}
       </div>
