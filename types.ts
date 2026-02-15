@@ -3,6 +3,7 @@ export interface FieldConfig {
   id: string;
   label: string;
   iconName: string;
+  enabledFor: string[]; // רשימת סוגי האירועים שבהם השדה מופעל
 }
 
 export interface CalendarEvent {
@@ -10,10 +11,10 @@ export interface CalendarEvent {
   date: string;
   type: string;
   details: Record<string, string>;
-  eventTime: string; // שעת האירוע / חופה (HH:mm)
+  eventTime: string; 
   reminderMinutes: number;
-  reminderTime?: string; // שעת התראה עבור תזכורות יום/שבוע לפני (HH:mm)
-  customReminderDate?: string; // תאריך תזכורת ספציפי (YYYY-MM-DD)
+  reminderTime?: string; 
+  customReminderDate?: string; 
 }
 
 export interface AppSettings {

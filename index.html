@@ -5,26 +5,31 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>לוח אירועים עברי</title>
+    <!-- Tailwind CDN - נשמר כתמיכה למכשירים עם אינטרנט -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@200..800&display=swap" rel="stylesheet">
     <style>
+      /* CSS בסיסי למקרה שאין אינטרנט וה-Tailwind לא נטען */
       body {
-        font-family: 'Assistant', sans-serif;
+        font-family: sans-serif;
         background-color: #f8fafc;
-        overscroll-behavior-y: contain; /* מניעת משיכה לריענון באנדרואיד */
+        margin: 0;
+        padding: 0;
+        direction: rtl;
+        -webkit-user-select: none;
       }
-      ::-webkit-scrollbar { width: 0px; } /* הסתרת סרגל גלילה למראה אפליקטיבי */
+      #root { min-height: 100vh; display: flex; flex-direction: column; }
       
-      /* מניעת בחירת טקסט למראה אפליקציה */
-      * {
-        -webkit-tap-highlight-color: transparent;
-        user-select: none;
+      /* התאמה מיוחדת למסכי 2.8 אינץ' (שיאומי) */
+      @media (max-width: 320px) {
+        body { font-size: 14px; }
+        .p-4 { padding: 8px !important; }
+        .text-2xl { font-size: 1.25rem !important; }
+        .text-xl { font-size: 1.1rem !important; }
+        nav span { display: none; }
       }
-      input, select, textarea {
-        user-select: auto;
-      }
+      
+      /* מניעת גלילה מיותרת */
+      .no-scroll { overflow: hidden; }
     </style>
     <script type="importmap">
     {
@@ -36,18 +41,11 @@
       }
     }
     </script>
-    <script>
-      // רישום Service Worker להתראות רקע
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW registration failed:', err));
-        });
-      }
-    </script>
   <link rel="stylesheet" href="/index.css">
 </head>
   <body>
     <div id="root"></div>
+    <script type="module" src="./index.tsx"></script>
   <script type="module" src="/index.tsx"></script>
 </body>
 </html>

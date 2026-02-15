@@ -1,8 +1,5 @@
-
 {
   "name": "לוח אירועים עברי",
   "description": "אפליקציה לניהול אירועים על בסיס הלוח העברי עם התראות אנדרואיד.",
-  "requestFramePermissions": [
-    "notifications"
-  ]
+  "requestFramePermissions": []
 }

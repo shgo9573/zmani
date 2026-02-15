@@ -8,7 +8,6 @@ interface CalendarViewProps {
   events: CalendarEvent[];
   onDateSelect: (date: string) => void;
   onAddEvent: (date: string) => void;
-  // Fix: Added settings to props to access dynamic field definitions
   settings: AppSettings;
 }
 
@@ -30,7 +29,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, onDateSelect, onAdd
       timerRef.current = window.setTimeout(() => {
         onAddEvent(dateStr);
         timerRef.current = null;
-      }, 600); // Long press threshold
+      }, 600);
     }
   };
 
@@ -83,43 +82,48 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, onDateSelect, onAdd
 
   const todayStr = formatDate(new Date());
 
-  // Fix: Added helper to get the primary detail text for an event
   const getPrimaryDetail = (event: CalendarEvent) => {
     const firstFieldId = settings.eventFields[0]?.id;
     return event.details[firstFieldId] || 'אירוע';
   };
 
   return (
-    <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden mb-20 select-none">
-      <div className="p-6 bg-indigo-600 text-white flex flex-col gap-1">
+    <div className="bg-white w-full min-h-[calc(100vh-160px)] flex flex-col select-none">
+      {/* כותרת החודש - רחבה ויוקרתית */}
+      <div className="w-full p-6 bg-gradient-to-r from-indigo-600 to-indigo-800 text-white shadow-lg">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-black">{getHebrewMonthYear(viewDate)}</h2>
-          <div className="flex gap-1">
-            <button onClick={() => changeMonth(1)} className="p-2 hover:bg-white/20 rounded-full">
-              <ChevronRight size={24} />
+          <div className="flex items-center gap-4">
+            <button onClick={() => changeMonth(1)} className="p-2.5 bg-white/10 hover:bg-white/20 rounded-2xl transition-all active:scale-90">
+              <ChevronRight size={28} />
             </button>
-            <button onClick={() => changeMonth(-1)} className="p-2 hover:bg-white/20 rounded-full">
-              <ChevronLeft size={24} />
+            <h2 className="text-3xl font-black tracking-tight drop-shadow-md">{getHebrewMonthYear(viewDate)}</h2>
+            <button onClick={() => changeMonth(-1)} className="p-2.5 bg-white/10 hover:bg-white/20 rounded-2xl transition-all active:scale-90">
+              <ChevronLeft size={28} />
             </button>
           </div>
+          <div className="text-left">
+            <span className="text-sm font-black opacity-90">{getGregorianMonthYear(viewDate)}</span>
+          </div>
         </div>
-        <div className="text-xs font-medium opacity-80 flex items-center justify-between">
-          <span>{getGregorianMonthYear(viewDate)}</span>
-          <span className="bg-white/20 px-2 py-0.5 rounded-full">לחיצה ארוכה להוספה</span>
+        <div className="mt-3 text-[11px] font-black text-indigo-100 flex items-center gap-2">
+          <div className="w-2.5 h-2.5 rounded-full bg-white shadow-[0_0_8px_white] animate-pulse"></div>
+          לחיצה ארוכה על תאריך להוספה מהירה
         </div>
       </div>
 
-      <div className="grid grid-cols-7 border-b border-slate-100">
+      {/* ימי השבוע */}
+      <div className="grid grid-cols-7 border-b border-slate-100 bg-slate-50">
         {weekDays.map(day => (
-          <div key={day} className="py-3 text-center text-xs font-black text-slate-400">
-            {day}'
+          <div key={day} className="py-3 text-center text-xs font-black text-slate-400 uppercase">
+            יום {day}'
           </div>
         ))}
       </div>
 
-      <div className="grid grid-cols-7 auto-rows-[100px] sm:auto-rows-[120px]">
+      {/* רשת התאריכים - מורחבת למקסימום */}
+      <div className="grid grid-cols-7 flex-1">
         {days.map((day, idx) => {
-          if (!day) return <div key={`empty-${idx}`} className="bg-slate-50/50" />;
+          if (!day) return <div key={`empty-${idx}`} className="bg-slate-50/40 border-l border-b border-slate-100/50" />;
           const dateKey = formatDate(day);
           const dayEvents = events.filter(e => e.date === dateKey);
           const isToday = todayStr === dateKey;
@@ -131,36 +135,29 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, onDateSelect, onAdd
               onTouchStart={(e) => handleTouchStart(e, dateKey)}
               onTouchMove={handleTouchMove}
               onTouchEnd={() => handleTouchEnd(dateKey)}
-              onMouseDown={() => {
-                timerRef.current = window.setTimeout(() => {
-                  onAddEvent(dateKey);
-                  timerRef.current = null;
-                }, 600);
-              }}
-              onMouseUp={() => {
-                if (timerRef.current) {
-                  window.clearTimeout(timerRef.current);
-                  onDateSelect(dateKey);
-                  timerRef.current = null;
-                }
-              }}
-              className={`border-l border-b border-slate-100 p-2 relative cursor-pointer hover:bg-indigo-50/50 transition-colors ${isToday ? 'bg-indigo-50' : ''}`}
+              className={`border-l border-b border-slate-100 p-2 relative cursor-pointer min-h-[85px] sm:min-h-[120px] transition-all group ${isToday ? 'bg-indigo-50/60' : 'hover:bg-slate-50 active:bg-indigo-50/30'}`}
             >
-              <div className="flex items-center justify-between">
-                <span className={`text-lg font-bold ${isToday ? 'text-indigo-600' : 'text-slate-700'}`}>
+              <div className="flex items-start justify-start relative z-10">
+                <span className={`text-xl sm:text-2xl font-black leading-tight ${isToday ? 'text-indigo-600' : 'text-slate-800'}`}>
                   {toHebrewNumeral(hebDay)}
                 </span>
-                <span className="text-[10px] text-slate-400">{day.getDate()}</span>
               </div>
 
-              <div className="mt-1 space-y-1">
-                {dayEvents.slice(0, 2).map(event => (
-                  <div key={event.id} className="bg-amber-100 text-amber-800 text-[9px] px-1.5 py-0.5 rounded border border-amber-200 truncate font-bold">
-                    {/* Fix: Replaced event.groomName with primary detail from settings */}
+              {/* תאריך לועזי - פינה שמאלית תחתונה */}
+              <div className="absolute bottom-2 left-2 text-[11px] font-black text-slate-300 group-hover:text-indigo-300 pointer-events-none transition-colors">
+                {day.getDate()}
+              </div>
+
+              {/* אירועים בתוך המשבצת */}
+              <div className="mt-1.5 space-y-1">
+                {dayEvents.slice(0, 3).map(event => (
+                  <div key={event.id} className="bg-amber-100/80 text-amber-900 text-[9px] sm:text-[11px] px-1.5 py-0.5 rounded border border-amber-200 truncate font-black leading-none shadow-sm">
                     {getPrimaryDetail(event)}
                   </div>
                 ))}
-                {dayEvents.length > 2 && <div className="text-[8px] text-indigo-500 font-bold text-center">+{dayEvents.length - 2}</div>}
+                {dayEvents.length > 3 && (
+                  <div className="text-[9px] text-indigo-500 font-black text-center">+ עוד {dayEvents.length - 3}</div>
+                )}
               </div>
             </div>
           );

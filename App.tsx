@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar, Home, List, Plus, Settings } from 'lucide-react';
 import { CalendarEvent, ViewType, AppSettings } from './types';
 import TodayView from './components/TodayView';
@@ -25,99 +25,44 @@ const App: React.FC = () => {
   const [viewingDate, setViewingDate] = useState<Date>(new Date());
   
   const [settings, setSettings] = useState<AppSettings>(() => {
-    const saved = localStorage.getItem('hebrew_calendar_settings_v2');
-    if (saved) return JSON.parse(saved);
+    try {
+      const saved = localStorage.getItem('hebrew_calendar_settings_v3');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    
+    const initialTypes = ['חתונה', 'אירוסין', 'בר מצווה'];
     return {
       notificationsEnabled: false,
       defaultReminderMinutes: 60,
       themeColor: 'indigo',
-      eventTypes: ['חתונה'],
+      eventTypes: initialTypes,
       eventFields: [
-        { id: 'main_name', label: 'שם החתן', iconName: 'User' },
-        { id: 'location', label: 'אולם / מיקום', iconName: 'MapPin' },
-        { id: 'singer', label: 'זמר', iconName: 'Music' },
-        { id: 'keyboardist', label: 'קלידן', iconName: 'Music' },
-        { id: 'notes', label: 'הערות נוספות', iconName: 'Info' }
+        { id: 'main_name', label: 'שם בעל השמחה', iconName: 'User', enabledFor: initialTypes },
+        { id: 'location', label: 'אולם / מיקום', iconName: 'MapPin', enabledFor: initialTypes },
+        { id: 'singer', label: 'זמר', iconName: 'Music', enabledFor: ['חתונה', 'אירוסין'] },
+        { id: 'keyboardist', label: 'קלידן', iconName: 'Music', enabledFor: ['חתונה'] },
+        { id: 'notes', label: 'הערות', iconName: 'Info', enabledFor: initialTypes }
       ]
     };
   });
 
   useEffect(() => {
-    if ('setAppBadge' in navigator) {
-      const today = getTodayStr();
-      const todayCount = events.filter(e => e.date === today).length;
-      if (todayCount > 0) {
-        (navigator as any).setAppBadge(todayCount).catch(() => {});
-      } else {
-        (navigator as any).clearAppBadge().catch(() => {});
-      }
-    }
-  }, [events]);
-
-  const checkUpcomingReminders = useCallback(() => {
-    if (!settings.notificationsEnabled || !('Notification' in window) || Notification.permission !== 'granted') return;
-
-    const todayStr = getTodayStr();
-    const now = new Date();
-    const currentH = now.getHours();
-    const currentM = now.getMinutes();
-    const currentTimeStr = `${currentH.toString().padStart(2, '0')}:${currentM.toString().padStart(2, '0')}`;
-    
-    events.forEach(event => {
-      let triggerTime = event.reminderTime || '09:00';
-      let isTriggerDay = false;
-
-      if ([15, 60, 120].includes(event.reminderMinutes) && event.date === todayStr) {
-        const [h, m] = (event.eventTime || '19:30').split(':').map(Number);
-        const eventDate = new Date();
-        eventDate.setHours(h, m, 0, 0);
-        const reminderDate = new Date(eventDate.getTime() - (event.reminderMinutes * 60000));
-        triggerTime = `${reminderDate.getHours().toString().padStart(2, '0')}:${reminderDate.getMinutes().toString().padStart(2, '0')}`;
-        isTriggerDay = true;
-      } else if (event.reminderMinutes === 1440) {
-        const tomorrow = new Date();
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        if (event.date === getTodayStr(tomorrow)) isTriggerDay = true;
-      } else if (event.reminderMinutes === 10080) {
-        const nextWeek = new Date();
-        nextWeek.setDate(nextWeek.getDate() + 7);
-        if (event.date === getTodayStr(nextWeek)) isTriggerDay = true;
-      } else if (event.reminderMinutes === -1 && event.customReminderDate === todayStr) {
-        isTriggerDay = true;
-      }
-
-      if (isTriggerDay && currentTimeStr === triggerTime) {
-        const lastNotifiedKey = `notified_${event.id}_${todayStr}_${currentTimeStr}`;
-        if (!localStorage.getItem(lastNotifiedKey)) {
-          const mainName = event.details[settings.eventFields[0].id] || 'אירוע';
-          new Notification(`תזכורת: ${event.type}`, {
-            body: `${mainName} ב- ${event.eventTime || 'היום'}`,
-            dir: 'rtl',
-            vibrate: [200, 100, 200]
-          } as any);
-          localStorage.setItem(lastNotifiedKey, 'true');
-        }
-      }
-    });
-  }, [events, settings]);
-
-  useEffect(() => {
-    checkUpcomingReminders();
-    const interval = setInterval(checkUpcomingReminders, 60000);
-    return () => clearInterval(interval);
-  }, [checkUpcomingReminders]);
-
-  useEffect(() => {
-    localStorage.setItem('hebrew_calendar_settings_v2', JSON.stringify(settings));
+    try {
+      localStorage.setItem('hebrew_calendar_settings_v3', JSON.stringify(settings));
+    } catch (e) {}
   }, [settings]);
 
   useEffect(() => {
-    const saved = localStorage.getItem('hebrew_events_calendar_events_v2');
-    if (saved) setEvents(JSON.parse(saved));
+    try {
+      const saved = localStorage.getItem('hebrew_events_calendar_events_v2');
+      if (saved) setEvents(JSON.parse(saved));
+    } catch (e) {}
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('hebrew_events_calendar_events_v2', JSON.stringify(events));
+    try {
+      localStorage.setItem('hebrew_events_calendar_events_v2', JSON.stringify(events));
+    } catch (e) {}
   }, [events]);
 
   const handleSaveEvent = (event: CalendarEvent) => {
@@ -139,7 +84,7 @@ const App: React.FC = () => {
   };
 
   const handleClearData = () => {
-    if (window.confirm('האם אתה בטוח שברצונך למחוק את כל האירועים? פעולה זו אינה ניתנת לביטול.')) {
+    if (window.confirm('למחוק את כל האירועים?')) {
       setEvents([]);
       localStorage.removeItem('hebrew_events_calendar_events_v2');
     }
@@ -148,15 +93,16 @@ const App: React.FC = () => {
   const themeColorKey = settings.themeColor || 'indigo';
 
   return (
-    <div className="min-h-screen max-w-[512px] mx-auto bg-slate-50 flex flex-col shadow-2xl overflow-x-hidden">
-      <header className="p-4 flex items-center justify-between sticky top-0 z-40 bg-slate-50/80 backdrop-blur-md border-b border-slate-100">
-        <div className="flex items-center gap-3">
-          <div className={`w-10 h-10 bg-${themeColorKey}-600 rounded-xl flex items-center justify-center text-white shadow-lg`}>
-            <Calendar size={24} />
+    <div className="min-h-screen w-full bg-slate-50 flex flex-col overflow-x-hidden">
+      {/* כותרת עליונה - רחבה ומאוזנת */}
+      <header className="w-full bg-white border-b border-slate-100 p-4 sm:p-6 flex items-center justify-between sticky top-0 z-40 shadow-sm">
+        <div className="flex items-center gap-4">
+          <div className={`w-11 h-11 bg-${themeColorKey}-600 rounded-2xl flex items-center justify-center text-white shadow-lg transition-transform hover:scale-105`}>
+            <Calendar size={26} />
           </div>
           <div>
-            <h1 className="text-xl font-black text-slate-800 leading-none">לוח אירועים</h1>
-            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Hebrew Manager</span>
+            <h1 className="text-2xl font-black text-slate-800 leading-tight">לוח אירועים</h1>
+            <span className="text-xs text-slate-400 font-bold tracking-widest uppercase">Hebrew Manager</span>
           </div>
         </div>
         <button 
@@ -165,24 +111,30 @@ const App: React.FC = () => {
             setEditingEvent({ eventTime: '19:30', reminderMinutes: settings.defaultReminderMinutes, reminderTime: '09:00', type: settings.eventTypes[0], details: {} });
             setIsModalOpen(true);
           }}
-          className={`w-10 h-10 bg-${themeColorKey}-50 text-${themeColorKey}-600 rounded-xl flex items-center justify-center`}
+          className={`w-11 h-11 bg-${themeColorKey}-50 text-${themeColorKey}-600 rounded-2xl flex items-center justify-center active:scale-90 transition-all shadow-sm border border-${themeColorKey}-100`}
         >
-          <Plus size={24} />
+          <Plus size={28} />
         </button>
       </header>
 
-      <main className="flex-1 px-4 overflow-y-auto">
-        {activeView === 'today' && <TodayView date={viewingDate} events={events.filter(e => e.date === getTodayStr(viewingDate))} onEventClick={(e) => { setSelectedDate(e.date); setEditingEvent(e); setIsModalOpen(true); }} onAddEvent={() => setIsModalOpen(true)} onDateChange={setViewingDate} settings={settings} />}
-        {activeView === 'calendar' && <CalendarView events={events} onDateSelect={(d) => { setViewingDate(new Date(d)); setActiveView('today'); }} onAddEvent={(d) => { setSelectedDate(d); setEditingEvent({ eventTime: '19:30', reminderMinutes: settings.defaultReminderMinutes, reminderTime: '09:00', type: settings.eventTypes[0], details: {} }); setIsModalOpen(true); }} settings={settings} />}
-        {activeView === 'list' && <EventsListView events={events} onEventClick={(e) => { setSelectedDate(e.date); setEditingEvent(e); setIsModalOpen(true); }} settings={settings} />}
-        {activeView === 'settings' && <SettingsView settings={settings} onUpdateSettings={setSettings} onImportData={setEvents} onClearData={handleClearData} />}
+      {/* תוכן ראשי - ללא מגבלת רוחב צרה */}
+      <main className="flex-1 w-full px-0 sm:px-4 py-0 overflow-y-auto">
+        <div className="w-full max-w-none">
+          {activeView === 'today' && <TodayView date={viewingDate} events={events.filter(e => e.date === getTodayStr(viewingDate))} onEventClick={(e) => { setSelectedDate(e.date); setEditingEvent(e); setIsModalOpen(true); }} onAddEvent={() => setIsModalOpen(true)} onDateChange={setViewingDate} settings={settings} />}
+          {activeView === 'calendar' && <CalendarView events={events} onDateSelect={(d) => { setViewingDate(new Date(d)); setActiveView('today'); }} onAddEvent={(d) => { setSelectedDate(d); setEditingEvent({ eventTime: '19:30', reminderMinutes: settings.defaultReminderMinutes, reminderTime: '09:00', type: settings.eventTypes[0], details: {} }); setIsModalOpen(true); }} settings={settings} />}
+          {activeView === 'list' && <EventsListView events={events} onEventClick={(e) => { setSelectedDate(e.date); setEditingEvent(e); setIsModalOpen(true); }} settings={settings} />}
+          {activeView === 'settings' && <div className="px-4 py-4"><SettingsView settings={settings} onUpdateSettings={setSettings} onImportData={setEvents} onClearData={handleClearData} /></div>}
+        </div>
       </main>
 
-      <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[512px] bg-white border-t border-slate-100 p-3 flex justify-around items-center z-50 rounded-t-3xl shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
-        <NavButton active={activeView === 'today'} onClick={() => { setViewingDate(new Date()); setActiveView('today'); }} icon={<Home size={22} />} label="היום" theme={themeColorKey} />
-        <NavButton active={activeView === 'calendar'} onClick={() => setActiveView('calendar')} icon={<Calendar size={22} />} label="לוח שנה" theme={themeColorKey} />
-        <NavButton active={activeView === 'list'} onClick={() => setActiveView('list')} icon={<List size={22} />} label="אירועים" theme={themeColorKey} />
-        <NavButton active={activeView === 'settings'} onClick={() => setActiveView('settings')} icon={<Settings size={22} />} label="הגדרות" theme={themeColorKey} />
+      <div className="h-24"></div>
+
+      {/* ניווט תחתון - רחב ותואם לכותרת */}
+      <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-100 px-3 py-4 flex justify-around items-center z-50 rounded-t-3xl shadow-[0_-12px_45px_rgba(0,0,0,0.08)]">
+        <NavButton active={activeView === 'today'} onClick={() => { setViewingDate(new Date()); setActiveView('today'); }} icon={<Home size={24} />} label="היום" themeColorKey={themeColorKey} />
+        <NavButton active={activeView === 'calendar'} onClick={() => setActiveView('calendar')} icon={<Calendar size={24} />} label="לוח" themeColorKey={themeColorKey} />
+        <NavButton active={activeView === 'list'} onClick={() => setActiveView('list')} icon={<List size={24} />} label="אירועים" themeColorKey={themeColorKey} />
+        <NavButton active={activeView === 'settings'} onClick={() => setActiveView('settings')} icon={<Settings size={24} />} label="הגדרות" themeColorKey={themeColorKey} />
       </nav>
 
       <EventModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSave={handleSaveEvent} onDelete={handleDeleteEvent} initialEvent={editingEvent} selectedDate={selectedDate} settings={settings} />
@@ -190,10 +142,10 @@ const App: React.FC = () => {
   );
 };
 
-const NavButton = ({ active, onClick, icon, label, theme }: any) => (
-  <button onClick={onClick} className={`flex flex-col items-center gap-1 transition-all px-4 py-2 rounded-2xl ${active ? `text-${theme}-600 bg-${theme}-50` : 'text-slate-400'}`}>
+const NavButton = ({ active, onClick, icon, label, themeColorKey }: any) => (
+  <button onClick={onClick} className={`flex-1 flex flex-col items-center gap-1.5 transition-all py-2 rounded-2xl ${active ? `text-${themeColorKey}-600 bg-${themeColorKey}-50/50` : 'text-slate-400 hover:text-slate-600'}`}>
     {icon}
-    <span className="text-[10px] font-black">{label}</span>
+    <span className="text-xs font-black">{label}</span>
   </button>
 );
 

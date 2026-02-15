@@ -1,13 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
-import { X, Save, Trash2, Bell, Check, User, MapPin, Music, Info, HelpCircle, Calendar as CalendarIcon, Clock, Star } from 'lucide-react';
+import { X, Save, Trash2, Bell, User, MapPin, Music, Info, HelpCircle, Calendar as CalendarIcon, Clock, Star } from 'lucide-react';
 import { CalendarEvent, AppSettings } from '../types';
 import { REMINDER_OPTIONS } from '../constants';
 import { getHebrewDateInfo } from '../utils/hebrewDateUtils';
 
-const IconMap: Record<string, any> = {
-  User, MapPin, Music, Info, HelpCircle
-};
+const IconMap: Record<string, any> = { User, MapPin, Music, Info, HelpCircle };
 
 interface EventModalProps {
   isOpen: boolean;
@@ -50,10 +48,9 @@ const EventModal: React.FC<EventModalProps> = ({
   if (!isOpen) return null;
 
   const updateDetail = (fieldId: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      details: { ...(prev.details || {}), [fieldId]: value }
-    }));
+    const newDetails = { ...(formData.details || {}) };
+    newDetails[fieldId] = value;
+    setFormData({ ...formData, details: newDetails });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -65,30 +62,35 @@ const EventModal: React.FC<EventModalProps> = ({
     } as CalendarEvent);
   };
 
-  const isRelativeReminder = formData.reminderMinutes && [15, 60, 120].includes(formData.reminderMinutes);
+  // סינון השדות שיופיעו לפי סוג האירוע הנבחר
+  const visibleFields = settings.eventFields.filter(field => 
+    !field.enabledFor || field.enabledFor.length === 0 || field.enabledFor.includes(formData.type || '')
+  );
+
+  const isRelative = formData.reminderMinutes === 15 || formData.reminderMinutes === 60 || formData.reminderMinutes === 120;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-0 sm:p-4 animate-in fade-in duration-200">
-      <div className="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[95vh] animate-in slide-in-from-bottom duration-300">
-        <div className="p-4 border-b flex items-center justify-between bg-indigo-600 text-white">
-          <div>
-            <h3 className="text-xl font-black">{formData.id ? 'עריכת אירוע' : 'הוספת אירוע'}</h3>
-            <p className="text-xs opacity-90">{getHebrewDateInfo(new Date(selectedDate))}</p>
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4">
+      <div className="bg-white w-full max-w-lg rounded-t-xl sm:rounded-2xl shadow-2xl flex flex-col max-h-[90vh] animate-in slide-in-from-bottom duration-300">
+        <div className="p-2 sm:p-3 border-b flex items-center justify-between bg-indigo-600 text-white">
+          <div className="overflow-hidden">
+            <h3 className="text-sm sm:text-base font-black truncate">{formData.id ? 'עריכת אירוע' : 'הוספת אירוע'}</h3>
+            <p className="text-[9px] opacity-80 truncate">{getHebrewDateInfo(new Date(selectedDate))}</p>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-white/20 rounded-full transition-colors"><X size={24} /></button>
+          <button onClick={onClose} className="p-1"><X size={18} /></button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-5">
+        <form onSubmit={handleSubmit} className="p-3 sm:p-4 overflow-y-auto space-y-3">
           {/* סוג אירוע */}
           <div>
-            <label className="block text-sm font-black text-slate-700 mb-2">סוג האירוע</label>
-            <div className="flex flex-wrap gap-2">
+            <label className="text-[9px] font-black text-slate-400 block mb-1">סוג אירוע:</label>
+            <div className="flex flex-wrap gap-1">
               {settings.eventTypes.map((type) => (
                 <button
                   key={type} type="button"
                   onClick={() => setFormData({ ...formData, type })}
-                  className={`px-4 py-2 rounded-xl border-2 text-sm font-bold transition-all ${
-                    formData.type === type ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' : 'bg-slate-50 text-slate-500 border-slate-100'
+                  className={`px-2 py-1 rounded border text-[10px] font-bold transition-all ${
+                    formData.type === type ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 text-slate-500 border-slate-200'
                   }`}
                 >
                   {type}
@@ -97,114 +99,89 @@ const EventModal: React.FC<EventModalProps> = ({
             </div>
           </div>
 
-          {/* שעת האירוע (חופה) */}
-          <div className="bg-indigo-50 p-4 rounded-2xl border border-indigo-100">
-            <label className="block text-sm font-black text-indigo-900 mb-2 flex items-center gap-2">
-              <Star size={16} className="text-indigo-600 fill-indigo-600" /> שעת האירוע (חופה)
-            </label>
-            <div className="relative">
-              <Clock className="absolute right-3 top-3 text-indigo-400" size={18} />
-              <input
-                type="time"
-                className="w-full pr-10 pl-4 py-2.5 bg-white border border-indigo-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-black text-indigo-900"
-                value={formData.eventTime}
-                onChange={(e) => setFormData({ ...formData, eventTime: e.target.value })}
-              />
-            </div>
+          <div className="bg-indigo-50 p-2 rounded-lg border border-indigo-100 flex items-center justify-between">
+            <label className="text-[10px] font-black text-indigo-900">שעת חופה/תחילת אירוע:</label>
+            <input
+              type="time"
+              className="px-2 py-1 bg-white border border-indigo-200 rounded text-xs font-black"
+              value={formData.eventTime}
+              onChange={(e) => setFormData({ ...formData, eventTime: e.target.value })}
+            />
           </div>
 
-          {/* שדות דינמיים */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {settings.eventFields.map((field) => {
+          <div className="grid grid-cols-1 gap-2 transition-all">
+            {visibleFields.map((field) => {
               const Icon = IconMap[field.iconName] || HelpCircle;
               return (
-                <div key={field.id} className="space-y-1">
-                  <label className="text-xs font-black text-slate-500 px-1">{field.label}</label>
-                  <div className="relative">
-                    <Icon className="absolute right-3 top-3 text-slate-400" size={18} />
-                    <input
-                      type="text"
-                      className="w-full pr-10 pl-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-bold"
-                      value={formData.details?.[field.id] || ''}
-                      onChange={(e) => updateDetail(field.id, e.target.value)}
-                    />
-                  </div>
+                <div key={field.id} className="relative animate-in fade-in slide-in-from-top-1 duration-200">
+                  <Icon className="absolute right-2 top-2.5 text-slate-400" size={14} />
+                  <input
+                    type="text"
+                    placeholder={field.label}
+                    className="w-full pr-8 pl-2 py-2 bg-slate-50 border border-slate-200 rounded text-xs font-bold focus:border-indigo-400 outline-none"
+                    value={(formData.details && formData.details[field.id]) || ''}
+                    onChange={(e) => updateDetail(field.id, e.target.value)}
+                  />
                 </div>
               );
             })}
           </div>
 
-          {/* תזכורת */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-slate-100">
-            <div className="space-y-1">
-              <label className="text-xs font-black text-slate-500 px-1">מתי להזכיר?</label>
-              <div className="relative">
-                <Bell className="absolute right-3 top-3 text-slate-400" size={18} />
-                <select
-                  className="w-full pr-10 pl-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none appearance-none font-bold"
-                  value={formData.reminderMinutes || 0}
-                  onChange={(e) => setFormData({ ...formData, reminderMinutes: parseInt(e.target.value) })}
-                >
-                  {REMINDER_OPTIONS.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-                </select>
-              </div>
+          <div className="pt-2 border-t border-slate-100 grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-[9px] font-black text-slate-500 block mb-0.5">תזכורת:</label>
+              <select
+                className="w-full px-1 py-1.5 bg-slate-50 border border-slate-200 rounded text-[10px] font-bold"
+                value={formData.reminderMinutes || 0}
+                onChange={(e) => setFormData({ ...formData, reminderMinutes: parseInt(e.target.value) })}
+              >
+                {REMINDER_OPTIONS.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+              </select>
             </div>
 
-            {/* שעת התראה אבסולוטית (רק אם זו לא תזכורת יחסית לשעה) */}
-            {(formData.reminderMinutes !== 0 && !isRelativeReminder) && (
-              <div className="space-y-1 animate-in fade-in zoom-in duration-200">
-                <label className="text-xs font-black text-slate-500 px-1">באיזו שעה להזכיר?</label>
-                <div className="relative">
-                  <Clock className="absolute right-3 top-3 text-slate-400" size={18} />
-                  <input
-                    type="time"
-                    className="w-full pr-10 pl-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-bold"
-                    value={formData.reminderTime}
-                    onChange={(e) => setFormData({ ...formData, reminderTime: e.target.value })}
-                  />
-                </div>
+            {(formData.reminderMinutes !== 0 && !isRelative) && (
+              <div>
+                <label className="text-[9px] font-black text-slate-500 block mb-0.5">שעת התראה:</label>
+                <input
+                  type="time"
+                  className="w-full px-1 py-1.5 bg-slate-50 border border-slate-200 rounded text-[10px] font-bold"
+                  value={formData.reminderTime}
+                  onChange={(e) => setFormData({ ...formData, reminderTime: e.target.value })}
+                />
               </div>
             )}
 
-            {/* תאריך מותאם אישית */}
             {formData.reminderMinutes === -1 && (
-              <div className="col-span-1 sm:col-span-2 space-y-1 animate-in fade-in zoom-in duration-200">
-                <label className="text-xs font-black text-slate-500 px-1">תאריך לתזכורת</label>
-                <div className="relative">
-                  <CalendarIcon className="absolute right-3 top-3 text-slate-400" size={18} />
-                  <input
-                    type="date"
-                    className="w-full pr-10 pl-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-bold"
-                    value={formData.customReminderDate}
-                    onChange={(e) => setFormData({ ...formData, customReminderDate: e.target.value })}
-                  />
-                </div>
+              <div className="col-span-2">
+                <label className="text-[9px] font-black text-slate-500 block mb-0.5">תאריך לתזכורת:</label>
+                <input
+                  type="date"
+                  className="w-full px-2 py-1.5 bg-slate-50 border border-slate-200 rounded text-xs font-bold"
+                  value={formData.customReminderDate}
+                  onChange={(e) => setFormData({ ...formData, customReminderDate: e.target.value })}
+                />
               </div>
             )}
           </div>
 
-          <div className="flex gap-3 pt-6 sticky bottom-0 bg-white pb-2">
-            <button
-              type="submit"
-              className="flex-1 bg-indigo-600 text-white py-4 rounded-2xl font-black text-lg shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2"
-            >
-              <Save size={22} /> שמור אירוע
+          <div className="flex gap-2 pt-2 sticky bottom-0 bg-white">
+            <button type="submit" className="flex-1 bg-indigo-600 text-white py-2.5 rounded-lg font-black text-sm flex items-center justify-center gap-1 shadow-lg active:scale-95 transition-all">
+              <Save size={16} /> שמירה
             </button>
             {formData.id && onDelete && (
               <button
                 type="button"
-                onClick={(e) => {
-                  e.preventDefault();
+                onClick={() => {
                   if (!isConfirmingDelete) {
                     setIsConfirmingDelete(true);
-                    setTimeout(() => setIsConfirmingDelete(false), 3000);
+                    setTimeout(() => setIsConfirmingDelete(false), 2000);
                   } else {
                     onDelete(String(formData.id));
                   }
                 }}
-                className={`min-w-[70px] flex flex-col items-center justify-center border-2 rounded-2xl transition-all ${isConfirmingDelete ? 'bg-red-600 border-red-600 text-white px-4' : 'bg-red-50 border-red-100 text-red-600'}`}
+                className={`px-3 rounded-lg border transition-all ${isConfirmingDelete ? 'bg-red-600 text-white border-red-600' : 'bg-red-50 text-red-600 border-red-100'}`}
               >
-                {isConfirmingDelete ? <span className="text-xs font-black">למחוק?</span> : <Trash2 size={24} />}
+                {isConfirmingDelete ? <span className="text-[10px] font-black">מחק?</span> : <Trash2 size={16} />}
               </button>
             )}
           </div>
