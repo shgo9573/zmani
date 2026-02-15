@@ -1,7 +1,6 @@
+
 {
-  "name": "Hebrew Event Planner Calendar",
-  "description": "A specialized Hebrew-Gregorian calendar for event planning, allowing users to manage weddings and events with details like groom name, venue, and performers.",
-  "requestFramePermissions": [
-    "geolocation"
-  ]
+  "name": "לוח עברי",
+  "description": "אפליקציה לניהול אירועים על בסיס הלוח העברי.",
+  "requestFramePermissions": []
 }

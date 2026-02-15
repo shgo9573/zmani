@@ -1,191 +1,209 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
-import { CalendarEvent } from './types';
-import { getHebrewDate, getMonthDays, formatHebrewDateShort, DAYS_OF_WEEK } from './utils/hebrewDateUtils';
-import { isAfterSunset } from './utils/zmanimUtils';
+import React, { useState, useEffect } from 'react';
+import { Calendar, Home, List, Plus, Settings } from 'lucide-react';
+import { CalendarEvent, ViewType, AppSettings } from './types';
+import TodayView from './components/TodayView';
+import CalendarView from './components/CalendarView';
+import EventsListView from './components/EventsListView';
 import EventModal from './components/EventModal';
-import { ChevronRight, ChevronLeft, Calendar as CalendarIcon, List as ListIcon, Search, MapPin, User, Music, CalendarDays } from 'lucide-react';
-
-type ViewType = 'calendar' | 'events';
+import SettingsView from './components/SettingsView';
 
 const App: React.FC = () => {
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [events, setEvents] = useState<Record<string, CalendarEvent>>({});
+  const [activeView, setActiveView] = useState<ViewType>('calendar');
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [editingEvent, setEditingEvent] = useState<CalendarEvent | undefined>(undefined);
-  const [view, setView] = useState<ViewType>('calendar');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [location, setLocation] = useState<{lat: number, lng: number} | null>(null);
+  const [editingEvent, setEditingEvent] = useState<Partial<CalendarEvent> | undefined>();
+
+  const getTodayStr = (date: Date = new Date()) => {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  };
+
+  const [selectedDate, setSelectedDate] = useState<string>(getTodayStr());
+  const [viewingDate, setViewingDate] = useState<Date>(new Date());
+  
+  const [settings, setSettings] = useState<AppSettings>(() => {
+    const saved = localStorage.getItem('hebrew_calendar_settings_v2');
+    if (saved) return JSON.parse(saved);
+    
+    // Default settings with only 'Wedding' and classic fields
+    return {
+      notificationsEnabled: false,
+      defaultReminderMinutes: 60,
+      themeColor: 'indigo',
+      eventTypes: ['חתונה'],
+      eventFields: [
+        { id: 'main_name', label: 'שם החתן / בעלי השמחה', iconName: 'User' },
+        { id: 'location', label: 'אולם / מיקום', iconName: 'MapPin' },
+        { id: 'music', label: 'זמר / תזמורת', iconName: 'Music' },
+        { id: 'notes', label: 'פרטים נוספים', iconName: 'Info' }
+      ]
+    };
+  });
 
   useEffect(() => {
-    navigator.geolocation.getCurrentPosition(
-      (pos) => setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-      () => console.log("Location access denied, using defaults.")
-    );
+    localStorage.setItem('hebrew_calendar_settings_v2', JSON.stringify(settings));
+  }, [settings]);
 
-    const savedEvents = localStorage.getItem('hebrew_calendar_events');
-    if (savedEvents) {
+  useEffect(() => {
+    const saved = localStorage.getItem('hebrew_events_calendar_events_v2');
+    if (saved) {
       try {
-        setEvents(JSON.parse(savedEvents));
-      } catch (e) { console.error(e); }
+        setEvents(JSON.parse(saved));
+      } catch (e) {
+        console.error("Failed to parse events", e);
+      }
     }
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('hebrew_calendar_events', JSON.stringify(events));
+    localStorage.setItem('hebrew_events_calendar_events_v2', JSON.stringify(events));
   }, [events]);
 
-  const nextMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
-  const prevMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
-  const goToToday = () => setCurrentDate(new Date());
+  const handleSaveEvent = (event: CalendarEvent) => {
+    setEvents(prev => {
+      const idx = prev.findIndex(e => String(e.id) === String(event.id));
+      if (idx > -1) {
+        const updated = [...prev];
+        updated[idx] = event;
+        return updated;
+      }
+      return [...prev, event];
+    });
+    setIsModalOpen(false);
+    setEditingEvent(undefined);
+  };
 
-  const handleDayClick = (date: Date) => {
-    const dateId = date.toISOString().split('T')[0];
-    setSelectedDate(date);
-    setEditingEvent(events[dateId]);
+  const handleDeleteEvent = (id: string) => {
+    setEvents(currentEvents => currentEvents.filter(e => String(e.id) !== String(id)));
+    setIsModalOpen(false);
+    setEditingEvent(undefined);
+  };
+
+  const openAddModal = (dateStr: string) => {
+    setSelectedDate(dateStr);
+    setEditingEvent({ 
+      reminderMinutes: settings.defaultReminderMinutes, 
+      type: settings.eventTypes[0],
+      details: {},
+      id: undefined 
+    });
     setIsModalOpen(true);
   };
 
-  const handleEditFromList = (event: CalendarEvent) => {
-    setSelectedDate(new Date(event.id));
+  const openEditModal = (event: CalendarEvent) => {
+    setSelectedDate(event.date);
     setEditingEvent(event);
     setIsModalOpen(true);
   };
 
-  const handleSaveEvent = (event: CalendarEvent) => {
-    setEvents(prev => ({ ...prev, [event.id]: event }));
-    setIsModalOpen(false);
+  const handleDateSelect = (dateStr: string) => {
+    setViewingDate(new Date(dateStr));
+    setActiveView('today');
   };
 
-  const handleDeleteEvent = (id: string) => {
-    const newEvents = { ...events };
-    delete newEvents[id];
-    setEvents(newEvents);
-    setIsModalOpen(false);
+  const handleDateChange = (newDate: Date) => {
+    setViewingDate(newDate);
+    setSelectedDate(getTodayStr(newDate));
   };
 
-  const sortedEventsList = useMemo(() => {
-    return Object.values(events)
-      .sort((a, b) => new Date(a.id).getTime() - new Date(b.id).getTime())
-      .filter(event => {
-        const query = searchQuery.toLowerCase();
-        return event.groomName.toLowerCase().includes(query) || event.hallName.toLowerCase().includes(query);
-      });
-  }, [events, searchQuery]);
+  const viewingDateStr = getTodayStr(viewingDate);
+  const viewingEvents = events.filter(e => e.date === viewingDateStr);
 
-  const days = getMonthDays(currentDate.getFullYear(), currentDate.getMonth());
-  const firstDayOfMonth = days[0].getDay();
-  const blanks = Array(firstDayOfMonth).fill(null);
-
-  const monthNameGregorian = currentDate.toLocaleString('he-IL', { month: 'long' });
-  const yearGregorian = currentDate.getFullYear();
-  const hebrewDateRange = `${formatHebrewDateShort(days[0])} - ${formatHebrewDateShort(days[days.length - 1])}`;
+  const themeColorKey = settings.themeColor || 'indigo';
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col max-w-lg mx-auto shadow-xl ring-1 ring-slate-200 h-screen overflow-hidden">
-      <header className="bg-white border-b border-slate-200 p-4 sticky top-0 z-10 shadow-sm">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className="bg-indigo-600 p-2 rounded-xl text-white shadow-md">
-              {view === 'calendar' ? <CalendarIcon size={24} /> : <ListIcon size={24} />}
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-slate-900 leading-none">
-                {view === 'calendar' ? 'יומן אירועים' : 'רשימת אירועים'}
-              </h1>
-              <p className="text-sm text-slate-500 mt-1">
-                {view === 'calendar' ? `${monthNameGregorian} ${yearGregorian}` : `סה"כ ${sortedEventsList.length} אירועים`}
-              </p>
-            </div>
+    <div className="min-h-screen max-w-[512px] mx-auto bg-slate-50 flex flex-col shadow-2xl overflow-x-hidden">
+      <header className="p-4 flex items-center justify-between sticky top-0 z-40 bg-slate-50/80 backdrop-blur-md">
+        <div className="flex items-center gap-3">
+          <div className={`w-10 h-10 bg-${themeColorKey}-600 rounded-xl flex items-center justify-center text-white shadow-lg`}>
+            <Calendar size={24} />
           </div>
-          {view === 'calendar' && (
-            <button onClick={goToToday} className="px-4 py-2 text-sm font-bold text-indigo-700 bg-indigo-50 border border-indigo-100 rounded-full">
-              היום
-            </button>
-          )}
+          <div>
+            <h1 className="text-xl font-black text-slate-800 leading-none">לוח עברי</h1>
+            <span className="text-xs text-slate-400 font-bold">ניהול אירועים אישי</span>
+          </div>
         </div>
-
-        {view === 'calendar' ? (
-          <div className="flex items-center justify-between bg-slate-100 p-2 rounded-2xl">
-            <button onClick={prevMonth} className="p-2 text-slate-600"><ChevronRight size={20} /></button>
-            <div className="text-sm font-extrabold text-slate-800">{hebrewDateRange}</div>
-            <button onClick={nextMonth} className="p-2 text-slate-600"><ChevronLeft size={20} /></button>
-          </div>
-        ) : (
-          <div className="relative">
-            <input type="text" placeholder="חפש אירוע..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pl-4 pr-10 py-3 bg-slate-100 rounded-2xl outline-none" />
-            <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-          </div>
-        )}
+        <button 
+          onClick={() => openAddModal(getTodayStr(viewingDate))}
+          className={`w-10 h-10 bg-${themeColorKey}-50 text-${themeColorKey}-600 rounded-xl flex items-center justify-center hover:opacity-80 transition-opacity`}
+        >
+          <Plus size={24} />
+        </button>
       </header>
 
-      <main className="flex-1 overflow-y-auto bg-slate-50">
-        {view === 'calendar' ? (
-          <div className="p-2">
-            <div className="grid grid-cols-7 gap-1.5">
-              {DAYS_OF_WEEK.map(day => <div key={day} className="text-center text-[11px] font-black text-slate-400 py-2">{day}'</div>)}
-              {blanks.map((_, i) => <div key={`blank-${i}`} className="aspect-square bg-slate-200/10 rounded-xl"></div>)}
-              {days.map(date => {
-                const dateId = date.toISOString().split('T')[0];
-                const event = events[dateId];
-                
-                // Adjust Hebrew date if it's today and after sunset
-                const isToday = new Date().toDateString() === date.toDateString();
-                let displayDate = date;
-                if (isToday && location && isAfterSunset(new Date(), location.lat, location.lng)) {
-                   // This logic for visual indicator could be expanded to show the "next" hebrew day
+      <main className="flex-1 px-4 overflow-y-auto">
+        {activeView === 'today' && (
+          <TodayView 
+            date={viewingDate} 
+            events={viewingEvents} 
+            onEventClick={openEditModal}
+            onAddEvent={() => openAddModal(viewingDateStr)} 
+            onDateChange={handleDateChange}
+            settings={settings}
+          />
+        )}
+        {activeView === 'calendar' && (
+          <CalendarView 
+            events={events} 
+            onDateSelect={handleDateSelect} 
+            onAddEvent={openAddModal} 
+            // Fix: Passing settings to CalendarView
+            settings={settings}
+          />
+        )}
+        {activeView === 'list' && (
+          <EventsListView 
+            events={events} 
+            onEventClick={openEditModal} 
+            settings={settings}
+          />
+        )}
+        {activeView === 'settings' && (
+           <SettingsView 
+             settings={settings} 
+             onUpdateSettings={setSettings} 
+             onImportData={(data) => setEvents(data)}
+             onClearData={() => {
+                if(confirm('למחוק את כל האירועים?')) {
+                  setEvents([]);
+                  localStorage.removeItem('hebrew_events_calendar_events_v2');
                 }
-                
-                const heb = getHebrewDate(date);
-
-                return (
-                  <div key={dateId} onClick={() => handleDayClick(date)} className={`relative aspect-square rounded-2xl p-1.5 cursor-pointer border ${isToday ? 'bg-indigo-50 border-indigo-300 ring-2 ring-indigo-500/10' : 'bg-white border-slate-100'}`}>
-                    <div className="flex justify-between items-start">
-                      <span className={`text-lg font-black ${isToday ? 'text-indigo-700' : 'text-slate-800'}`}>{heb.dayHebrew}</span>
-                      <span className="text-[10px] text-slate-400">{date.getDate()}</span>
-                    </div>
-                    <div className="absolute inset-x-1 bottom-1.5">
-                      {event && <div className="bg-amber-100 text-amber-900 text-[9px] font-black px-1 py-0.5 rounded truncate border border-amber-200">{event.groomName}</div>}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        ) : (
-          <div className="p-4 space-y-3">
-            {sortedEventsList.map(event => (
-              <div key={event.id} onClick={() => handleEditFromList(event)} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col gap-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-[10px] font-black text-indigo-600 uppercase">{event.eventType}</span>
-                  <span className="text-[10px] font-bold text-slate-400">{getHebrewDate(new Date(event.id)).full}</span>
-                </div>
-                <div className="flex items-center gap-2"><User size={14} className="text-slate-400"/><span className="font-black text-slate-800">{event.groomName}</span></div>
-                <div className="flex items-center gap-2"><MapPin size={14} className="text-slate-400"/><span className="text-xs font-bold text-slate-500">{event.hallName}</span></div>
-              </div>
-            ))}
-          </div>
+             }}
+           />
         )}
       </main>
 
-      <footer className="bg-white border-t border-slate-200 py-3 px-4 flex justify-around items-center sticky bottom-0">
-        <button onClick={() => setView('calendar')} className={`flex flex-col items-center gap-1 ${view === 'calendar' ? 'text-indigo-600' : 'text-slate-400'}`}>
-          <CalendarIcon size={22} strokeWidth={2.5} /><span className="text-[10px] font-black">לוח שנה</span>
-        </button>
-        <button onClick={() => setView('events')} className={`flex flex-col items-center gap-1 ${view === 'events' ? 'text-indigo-600' : 'text-slate-400'}`}>
-          <ListIcon size={22} strokeWidth={2.5} /><span className="text-[10px] font-black">אירועים</span>
-        </button>
-      </footer>
+      <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[512px] bg-white border-t border-slate-100 p-3 flex justify-around items-center z-50 rounded-t-3xl shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+        <NavButton active={activeView === 'today'} onClick={() => { setViewingDate(new Date()); setActiveView('today'); }} icon={<Home size={22} />} label="היום" theme={themeColorKey} />
+        <NavButton active={activeView === 'calendar'} onClick={() => setActiveView('calendar')} icon={<Calendar size={22} />} label="לוח שנה" theme={themeColorKey} />
+        <NavButton active={activeView === 'list'} onClick={() => setActiveView('list')} icon={<List size={22} />} label="אירועים" theme={themeColorKey} />
+        <NavButton active={activeView === 'settings'} onClick={() => setActiveView('settings')} icon={<Settings size={22} />} label="הגדרות" theme={themeColorKey} />
+      </nav>
 
       <EventModal
-        isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}
-        onSave={handleSaveEvent} onDelete={handleDeleteEvent}
-        selectedDate={selectedDate} existingEvent={editingEvent}
-        hebrewDateStr={selectedDate ? getHebrewDate(selectedDate).full : ''}
+        isOpen={isModalOpen}
+        onClose={() => { setIsModalOpen(false); setEditingEvent(undefined); }}
+        onSave={handleSaveEvent}
+        onDelete={handleDeleteEvent}
+        initialEvent={editingEvent}
+        selectedDate={selectedDate}
+        settings={settings}
       />
     </div>
   );
 };
+
+const NavButton = ({ active, onClick, icon, label, theme }: any) => (
+  <button 
+    onClick={onClick}
+    className={`flex flex-col items-center gap-1 transition-all px-4 py-2 rounded-2xl ${active ? `text-${theme}-600 bg-${theme}-50` : 'text-slate-400'}`}
+  >
+    {icon}
+    <span className="text-[10px] font-black">{label}</span>
+  </button>
+);
 
 export default App;
