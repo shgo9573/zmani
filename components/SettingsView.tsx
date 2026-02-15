@@ -1,5 +1,5 @@
 
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { Bell, BellOff, Trash2, Plus, X, Layers, Layout, User, MapPin, Music, Info, HelpCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { AppSettings, CalendarEvent, FieldConfig } from '../types';
 
@@ -53,7 +53,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({ settings, onUpdateSettings,
         id: `field_${Date.now()}`,
         label: newFieldLabel.trim(),
         iconName: newFieldIcon,
-        enabledFor: [] // מופעל לכל הסוגים כברירת מחדל
+        enabledFor: [] 
       };
       onUpdateSettings({ ...settings, eventFields: [...settings.eventFields, newField] });
       setNewFieldLabel('');
@@ -67,74 +67,125 @@ const SettingsView: React.FC<SettingsViewProps> = ({ settings, onUpdateSettings,
   };
 
   return (
-    <div className="scrollable h-full" style={{padding: '15px', paddingBottom: '100px'}}>
+    <div className="view-container" style={{padding: '16px 16px 120px'}}>
       {/* סוגי אירועים */}
-      <div className="card" style={{padding: '16px', marginBottom: '16px', background: 'white', borderRadius: '16px', border: '1px solid #e2e8f0'}}>
-        <div className="flex items-center gap-2 mb-4">
-          <Layers size={22} style={{color: '#4f46e5'}} />
-          <h3 style={{fontSize: '18px', fontWeight: 'bold'}}>סוגי אירועים</h3>
+      <div style={{background: 'white', borderRadius: '20px', padding: '20px', border: '1px solid #e2e8f0', marginBottom: '20px'}}>
+        <div style={{display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px'}}>
+          <Layers size={20} style={{color: '#4f46e5'}} />
+          <h3 style={{fontSize: '17px', fontWeight: '900', color: '#1e293b'}}>סוגי אירועים</h3>
         </div>
-        <div className="flex flex-col gap-3 mb-4">
+
+        <div style={{display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px'}}>
           {settings.eventTypes.map(type => {
             const isMuted = settings.mutedEventTypes.includes(type);
             return (
-              <div key={type} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border-2 border-slate-100">
-                <span style={{fontSize: '16px', fontWeight: 'bold'}}>{type}</span>
-                <div className="flex items-center gap-3">
-                  <button onClick={() => toggleMuteType(type)} style={{fontSize: '12px', color: isMuted ? '#94a3b8' : '#4f46e5', display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 10px', background: isMuted ? '#f1f5f9' : '#eef2ff', borderRadius: '8px', fontWeight: 'bold', border: 'none'}}>
-                    {isMuted ? <BellOff size={16} /> : <Bell size={16} />}
-                    {isMuted ? 'ללא צילצול' : 'עם צילצול'}
+              <div key={type} style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0', width: '100%'}}>
+                <span style={{fontSize: '15px', fontWeight: 'bold', color: '#334155'}}>{type}</span>
+                <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                  <button 
+                    onClick={() => toggleMuteType(type)} 
+                    style={{
+                      background: isMuted ? '#f1f5f9' : '#eef2ff', 
+                      color: isMuted ? '#64748b' : '#4f46e5',
+                      padding: '6px 12px',
+                      borderRadius: '10px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      fontSize: '13px',
+                      fontWeight: 'bold',
+                      border: 'none'
+                    }}
+                  >
+                    {isMuted ? <BellOff size={14} /> : <Bell size={14} />}
+                    {isMuted ? 'שקט' : 'פעיל'}
                   </button>
-                  <button onClick={() => removeEventType(type)} style={{color: '#ef4444', padding: '5px', border: 'none'}}><X size={22} /></button>
+                  <button 
+                    onClick={() => removeEventType(type)} 
+                    style={{
+                      color: '#ef4444', 
+                      padding: '6px', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center',
+                      background: '#fff1f2',
+                      borderRadius: '8px',
+                      border: 'none'
+                    }}
+                  >
+                    <X size={18} />
+                  </button>
                 </div>
               </div>
             );
           })}
         </div>
-        <div className="flex gap-2">
-          <input type="text" placeholder="סוג חדש (למשל: ברית)" className="input-field" value={newType} onChange={(e) => setNewType(e.target.value)} style={{flex: 1, padding: '12px', background: '#f8fafc', border: '2px solid #e2e8f0', borderRadius: '12px'}} />
-          <button onClick={addEventType} style={{background: '#4f46e5', color: 'white', padding: '0 15px', borderRadius: '12px', border: 'none'}}><Plus size={24} /></button>
+
+        <div style={{display: 'flex', gap: '8px'}}>
+          <input 
+            type="text" 
+            placeholder="סוג חדש..." 
+            value={newType} 
+            onChange={(e) => setNewType(e.target.value)} 
+            style={{flex: 1, padding: '12px 14px', background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: '12px', fontSize: '15px', color: '#1e293b'}} 
+          />
+          <button 
+            onClick={addEventType} 
+            style={{background: '#4f46e5', color: 'white', width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none'}}
+          >
+            <Plus size={22} strokeWidth={3} />
+          </button>
         </div>
       </div>
 
       {/* שדות בטופס */}
-      <div className="card" style={{padding: '16px', marginBottom: '16px', background: 'white', borderRadius: '16px', border: '1px solid #e2e8f0'}}>
-        <div className="flex items-center gap-2 mb-4">
-          <Layout size={22} style={{color: '#4f46e5'}} />
-          <h3 style={{fontSize: '18px', fontWeight: 'bold'}}>שדות בטופס (ניהול אייקונים)</h3>
+      <div style={{background: 'white', borderRadius: '20px', padding: '20px', border: '1px solid #e2e8f0', marginBottom: '20px'}}>
+        <div style={{display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px'}}>
+          <Layout size={20} style={{color: '#4f46e5'}} />
+          <h3 style={{fontSize: '17px', fontWeight: '900', color: '#1e293b'}}>שדות בטופס</h3>
         </div>
-        <div className="flex flex-col gap-3 mb-5">
+
+        <div style={{display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px'}}>
           {settings.eventFields.map(field => {
             const Icon = IconMap[field.iconName] || HelpCircle;
             return (
-              <div key={field.id} className="p-3 bg-slate-50 border-2 border-slate-100 rounded-xl flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div style={{background: '#eef2ff', padding: '8px', borderRadius: '10px'}}>
-                    <Icon size={20} style={{color: '#4f46e5'}} />
-                  </div>
-                  <span style={{fontSize: '15px', fontWeight: 'bold'}}>{field.label}</span>
+              <div key={field.id} style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0', width: '100%'}}>
+                <div style={{display: 'flex', alignItems: 'center', gap: '12px'}}>
+                  <div style={{background: '#eef2ff', color: '#4f46e5', padding: '8px', borderRadius: '10px'}}><Icon size={18} /></div>
+                  <span style={{fontWeight: 'bold', fontSize: '15px', color: '#334155'}}>{field.label}</span>
                 </div>
-                <button onClick={() => removeField(field.id)} style={{color: '#ef4444', padding: '5px', border: 'none'}}><Trash2 size={18} /></button>
+                <button 
+                  onClick={() => removeField(field.id)} 
+                  style={{
+                    color: '#ef4444', 
+                    padding: '8px', 
+                    background: '#fff1f2', 
+                    borderRadius: '8px', 
+                    border: 'none', 
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  <Trash2 size={18} />
+                </button>
               </div>
             );
           })}
         </div>
 
-        {/* טופס הוספת שדה חדש עם בחירת אייקון */}
-        <div style={{background: '#f8fafc', padding: '15px', borderRadius: '16px', border: '2px dashed #cbd5e1'}}>
-           <p style={{fontSize: '14px', fontWeight: 'bold', marginBottom: '12px', color: '#475569'}}>הוספת שדה חדש:</p>
-           
+        {/* הוספת שדה חדש */}
+        <div style={{background: '#f8fafc', padding: '16px', borderRadius: '16px', border: '1.5px dashed #cbd5e1'}}>
+           <p style={{fontSize: '12px', fontWeight: '900', color: '#64748b', marginBottom: '10px'}}>הוספת שדה חדש:</p>
            <input 
              type="text" 
-             placeholder="שם השדה (למשל: צלם, תקליטן)" 
-             className="input-field" 
+             placeholder="שם שדה (למשל: צלם)..." 
              value={newFieldLabel} 
              onChange={(e) => setNewFieldLabel(e.target.value)} 
-             style={{marginBottom: '12px', background: 'white', width: '100%', padding: '12px', border: '2px solid #e2e8f0', borderRadius: '12px'}} 
+             style={{width: '100%', padding: '12px 14px', marginBottom: '12px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '15px', color: '#1e293b'}} 
            />
-
-           <p style={{fontSize: '12px', fontWeight: 'bold', marginBottom: '8px', color: '#64748b'}}>בחר אייקון שיופיע ליד השדה:</p>
-           <div className="flex gap-2 mb-4" style={{justifyContent: 'space-between'}}>
+           
+           <div style={{display: 'flex', gap: '8px', marginBottom: '12px', overflowX: 'auto', paddingBottom: '4px'}}>
              {AvailableIcons.map(iconObj => {
                const IconComp = iconObj.component;
                const isSelected = newFieldIcon === iconObj.name;
@@ -142,37 +193,69 @@ const SettingsView: React.FC<SettingsViewProps> = ({ settings, onUpdateSettings,
                  <button 
                    key={iconObj.name}
                    onClick={() => setNewFieldIcon(iconObj.name)}
-                   type="button"
                    style={{
-                     flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px', padding: '10px 5px',
-                     borderRadius: '12px', border: '2px solid',
-                     borderColor: isSelected ? '#4f46e5' : '#e2e8f0',
+                     flex: '0 0 auto', padding: '8px 12px', borderRadius: '10px', border: '2px solid',
+                     borderColor: isSelected ? '#4f46e5' : 'transparent',
                      background: isSelected ? '#eef2ff' : 'white',
-                     color: isSelected ? '#4f46e5' : '#94a3b8'
+                     color: isSelected ? '#4f46e5' : '#94a3b8',
+                     display: 'flex',
+                     flexDirection: 'column',
+                     alignItems: 'center',
+                     gap: '2px',
+                     minWidth: '55px'
                    }}
                  >
-                   <IconComp size={22} />
-                   <span style={{fontSize: '10px', fontWeight: 'bold'}}>{iconObj.label}</span>
+                   <IconComp size={18} />
+                   <span style={{fontSize: '9px', fontWeight: 'bold'}}>{iconObj.label}</span>
                  </button>
                );
              })}
            </div>
 
-           <button onClick={addField} type="button" style={{width: '100%', background: '#4f46e5', color: 'white', padding: '12px', borderRadius: '12px', fontWeight: 'bold', border: 'none', fontSize: '16px'}}>+ הוסף שדה למערכת</button>
+           <button 
+             onClick={addField} 
+             style={{
+               width: '100%', 
+               background: '#4f46e5', 
+               color: 'white', 
+               padding: '14px', 
+               borderRadius: '12px', 
+               fontWeight: '900', 
+               fontSize: '15px',
+               border: 'none'
+             }}
+           >
+             + הוסף שדה למערכת
+           </button>
         </div>
       </div>
 
-      {/* עזרה */}
-      <div style={{background: '#1e293b', color: 'white', padding: '15px', borderRadius: '16px'}}>
-        <button onClick={() => setShowHelp(!showHelp)} style={{width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: 'white', background: 'none', border: 'none', cursor: 'pointer'}}>
-           <span style={{fontWeight: 'bold', fontSize: '15px'}}>מדריך שימוש קצר</span>
-           {showHelp ? <ChevronUp size={22} /> : <ChevronDown size={22} />}
+      {/* מדריך שימוש קצר */}
+      <div style={{background: '#1e293b', color: 'white', borderRadius: '16px', overflow: 'hidden', border: '1px solid #334155'}}>
+        <button 
+          onClick={() => setShowHelp(!showHelp)} 
+          style={{
+            width: '100%', 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center', 
+            color: 'white', 
+            background: 'none', 
+            border: 'none', 
+            padding: '16px',
+            textAlign: 'right'
+          }}
+        >
+           <span style={{fontWeight: '900', fontSize: '15px'}}>מדריך שימוש קצר</span>
+           <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+             {showHelp ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+           </div>
         </button>
         {showHelp && (
-          <div style={{marginTop: '15px', fontSize: '14px', opacity: 0.9, lineHeight: '1.6', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '10px'}}>
-            <p>• <b>הוספת אירוע:</b> לחיצה ארוכה על תאריך בלוח או כפתור ה- + למעלה.</p>
-            <p>• <b>התאמה אישית:</b> כאן בהגדרות תוכלו להוסיף שדות כמו 'צלם' או 'זמר' שיסונכרנו לכל האירועים שלכם.</p>
-            <p>• <b>התראות:</b> תוכלו להגדיר תזכורת לכל אירוע (שעה לפני, יום לפני וכו').</p>
+          <div style={{padding: '0 16px 16px', fontSize: '13px', lineHeight: '1.6', color: 'rgba(255,255,255,0.8)', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '12px'}}>
+            <div style={{marginBottom: '6px'}}>• <b>הוספת אירוע:</b> לחיצה ארוכה על יום בלוח או כפתור ה-<b>+</b> למעלה.</div>
+            <div style={{marginBottom: '6px'}}>• <b>שדות מותאמים:</b> ניתן להוסיף שדות כמו 'צלם' או 'מוזיקה' שיופיעו בכל אירוע.</div>
+            <div>• <b>פרטיות:</b> כל המידע נשמר על המכשיר שלך בלבד ולא בענן.</div>
           </div>
         )}
       </div>

@@ -47,36 +47,52 @@ const App: React.FC = () => {
     if (saved) setEvents(JSON.parse(saved));
   }, []);
 
+  const openAddModal = () => {
+    setSelectedDate(getTodayStr(viewingDate));
+    setEditingEvent({ 
+      eventTime: '19:30', 
+      reminderMinutes: settings.defaultReminderMinutes, 
+      reminderTime: '09:00', 
+      type: settings.eventTypes[0], 
+      details: {} 
+    });
+    setIsModalOpen(true);
+  };
+
   return (
-    <>
+    <div id="root">
       <header className="app-header">
-        <span style={{fontSize: '11px', fontWeight: 'bold'}}>לוח אירועים</span>
+        <h1 style={{fontSize: '18px', fontWeight: '800', color: '#1e293b'}}>לוח אירועים</h1>
         <button 
-          onClick={() => {
-            setSelectedDate(getTodayStr(viewingDate));
-            setEditingEvent({ eventTime: '19:30', reminderMinutes: settings.defaultReminderMinutes, reminderTime: '09:00', type: settings.eventTypes[0], details: {} });
-            setIsModalOpen(true);
+          onClick={openAddModal}
+          style={{
+            background: '#4f46e5', 
+            color: 'white', 
+            width: '36px', 
+            height: '36px', 
+            borderRadius: '10px', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            boxShadow: '0 4px 6px -1px rgba(79, 70, 229, 0.4)'
           }}
-          style={{background: '#4f46e5', color: 'white', padding: '2px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: 'bold', border: 'none'}}
         >
-          <Plus size={14} />
+          <Plus size={24} strokeWidth={3} />
         </button>
       </header>
 
-      <main style={{flex: 1, overflow: 'hidden', position: 'relative'}}>
-        <div style={{position: 'absolute', inset: 0}}>
-          {activeView === 'today' && <TodayView date={viewingDate} events={events.filter(e => e.date === getTodayStr(viewingDate))} onEventClick={(e) => { setSelectedDate(e.date); setEditingEvent(e); setIsModalOpen(true); }} onAddEvent={() => setIsModalOpen(true)} onDateChange={setViewingDate} settings={settings} />}
-          {activeView === 'calendar' && <CalendarView events={events} onDateSelect={(d) => { setViewingDate(new Date(d)); setActiveView('today'); }} onAddEvent={(d) => { setSelectedDate(d); setEditingEvent({ eventTime: '19:30', reminderMinutes: settings.defaultReminderMinutes, reminderTime: '09:00', type: settings.eventTypes[0], details: {} }); setIsModalOpen(true); }} settings={settings} />}
-          {activeView === 'list' && <EventsListView events={events} onEventClick={(e) => { setSelectedDate(e.date); setEditingEvent(e); setIsModalOpen(true); }} settings={settings} />}
-          {activeView === 'settings' && <div className="p-2 h-full overflow-y-auto"><SettingsView settings={settings} onUpdateSettings={setSettings} onImportData={setEvents} onClearData={() => setEvents([])} /></div>}
-        </div>
+      <main>
+        {activeView === 'today' && <TodayView date={viewingDate} events={events.filter(e => e.date === getTodayStr(viewingDate))} onEventClick={(e) => { setSelectedDate(e.date); setEditingEvent(e); setIsModalOpen(true); }} onAddEvent={openAddModal} onDateChange={setViewingDate} settings={settings} />}
+        {activeView === 'calendar' && <CalendarView events={events} onDateSelect={(d) => { setViewingDate(new Date(d)); setActiveView('today'); }} onAddEvent={(d) => { setSelectedDate(d); setEditingEvent({ eventTime: '19:30', reminderMinutes: settings.defaultReminderMinutes, reminderTime: '09:00', type: settings.eventTypes[0], details: {} }); setIsModalOpen(true); }} settings={settings} />}
+        {activeView === 'list' && <EventsListView events={events} onEventClick={(e) => { setSelectedDate(e.date); setEditingEvent(e); setIsModalOpen(true); }} settings={settings} />}
+        {activeView === 'settings' && <SettingsView settings={settings} onUpdateSettings={setSettings} onImportData={setEvents} onClearData={() => setEvents([])} />}
       </main>
 
       <nav className="app-nav">
-        <NavBtn active={activeView === 'today'} onClick={() => { setViewingDate(new Date()); setActiveView('today'); }} icon={<Home size={16} />} label="היום" />
-        <NavBtn active={activeView === 'calendar'} onClick={() => setActiveView('calendar')} icon={<Calendar size={16} />} label="לוח" />
-        <NavBtn active={activeView === 'list'} onClick={() => setActiveView('list')} icon={<List size={16} />} label="רשימה" />
-        <NavBtn active={activeView === 'settings'} onClick={() => setActiveView('settings')} icon={<Settings size={16} />} label="הגדרות" />
+        <NavBtn active={activeView === 'today'} onClick={() => { setViewingDate(new Date()); setActiveView('today'); }} icon={<Home size={24} />} label="היום" />
+        <NavBtn active={activeView === 'calendar'} onClick={() => setActiveView('calendar')} icon={<Calendar size={24} />} label="לוח" />
+        <NavBtn active={activeView === 'list'} onClick={() => setActiveView('list')} icon={<List size={24} />} label="רשימה" />
+        <NavBtn active={activeView === 'settings'} onClick={() => setActiveView('settings')} icon={<Settings size={24} />} label="הגדרות" />
       </nav>
 
       <EventModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSave={(e) => {
@@ -95,7 +111,7 @@ const App: React.FC = () => {
         });
         setIsModalOpen(false);
       }} initialEvent={editingEvent} selectedDate={selectedDate} settings={settings} />
-    </>
+    </div>
   );
 };
 

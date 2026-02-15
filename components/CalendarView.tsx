@@ -57,25 +57,23 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, onDateSelect, onAdd
   return (
     <div style={{height: '100%', width: '100%', display: 'flex', flexDirection: 'column', background: 'white'}}>
       <div className="cal-header">
-        {/* הבא בימין */}
         <button onClick={() => changeMonth(1)} className="cal-btn">
-          <ChevronRight size={20} />
+          <ChevronRight size={28} strokeWidth={2.5} />
         </button>
 
-        <div className="cal-title">
-          <div style={{fontSize: '12px', fontWeight: '900', lineHeight: '1'}}>{getHebrewMonthYear(viewDate)}</div>
-          <div style={{fontSize: '7px', opacity: 0.8}}>{getGregorianMonthYear(viewDate)}</div>
+        <div style={{textAlign: 'center'}}>
+          <div style={{fontSize: '18px', fontWeight: '900'}}>{getHebrewMonthYear(viewDate)}</div>
+          <div style={{fontSize: '11px', opacity: 0.8}}>{getGregorianMonthYear(viewDate)}</div>
         </div>
 
-        {/* קודם בשמאל */}
         <button onClick={() => changeMonth(-1)} className="cal-btn">
-          <ChevronLeft size={20} />
+          <ChevronLeft size={28} strokeWidth={2.5} />
         </button>
       </div>
 
-      <div style={{display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', background: '#f8fafc', borderBottom: '1px solid #e2e8f0'}}>
+      <div style={{display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', height: '36px', alignItems: 'center'}}>
         {weekDays.map(day => (
-          <div key={day} className="weekday-header">{day}</div>
+          <div key={day} style={{textAlign: 'center', fontSize: '14px', fontWeight: 'bold', color: '#64748b'}}>{day}</div>
         ))}
       </div>
 
@@ -102,10 +100,11 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, onDateSelect, onAdd
               onPointerMove={(e) => {
                 if (startPos.current && timerRef.current) {
                   const dist = Math.sqrt(Math.pow(e.clientX - startPos.current.x, 2) + Math.pow(e.clientY - startPos.current.y, 2));
-                  if (dist > 6) clearTimeout(timerRef.current);
+                  if (dist > 10) clearTimeout(timerRef.current);
                 }
               }}
-              className={`date-cell ${isToday ? 'today' : ''}`}
+              className="date-cell"
+              style={isToday ? {background: '#f0f4ff'} : {}}
             >
               <span className="heb-day" style={isToday ? {color: '#4f46e5'} : {}}>
                 {toHebrewNumeral(hebDayNum)}

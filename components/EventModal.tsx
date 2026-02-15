@@ -71,25 +71,48 @@ const EventModal: React.FC<EventModalProps> = ({
   return (
     <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="modal-content">
-        <div className="p-3 border-b flex items-center justify-between bg-primary text-white">
+        {/* כותרת משופרת - תיקון החפיפה */}
+        <div style={{
+          padding: '16px 20px', 
+          borderBottom: '1px solid #eee', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between',
+          background: '#4f46e5',
+          color: 'white'
+        }}>
           <div>
-            <h3 style={{fontSize: '20px', fontWeight: 'bold', margin: 0}}>{formData.id ? 'עריכת אירוע' : 'הוספת אירוע'}</h3>
-            <p style={{fontSize: '13px', opacity: 0.9, margin: 0}}>{getHebrewDateInfo(new Date(selectedDate))}</p>
+            <h3 style={{fontSize: '20px', fontWeight: '900', margin: 0}}>{formData.id ? 'עריכת אירוע' : 'הוספת אירוע'}</h3>
+            <p style={{fontSize: '12px', opacity: 0.8, margin: 0}}>{getHebrewDateInfo(new Date(selectedDate))}</p>
           </div>
-          <button onClick={onClose} style={{background: 'rgba(255,255,255,0.2)', padding: '8px', borderRadius: '50%', color: 'white'}}><X size={24} /></button>
+          <button 
+            onClick={onClose} 
+            style={{
+              background: 'rgba(255,255,255,0.15)', 
+              width: '32px', 
+              height: '32px', 
+              borderRadius: '50%', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              color: 'white'
+            }}
+          >
+            <X size={20} />
+          </button>
         </div>
 
-        <form onSubmit={handleSubmit} style={{padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px'}}>
+        <form onSubmit={handleSubmit} style={{padding: '20px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '20px'}}>
           {/* סוג אירוע */}
           <div>
-            <label style={{fontSize: '14px', fontWeight: 'bold', color: '#64748b', display: 'block', marginBottom: '10px'}}>סוג אירוע:</label>
-            <div className="flex" style={{flexWrap: 'wrap', gap: '10px'}}>
+            <label style={{fontSize: '13px', fontWeight: '800', color: '#64748b', display: 'block', marginBottom: '8px'}}>סוג אירוע:</label>
+            <div className="flex" style={{flexWrap: 'wrap', gap: '8px'}}>
               {settings.eventTypes.map((type) => (
                 <button
                   key={type} type="button"
                   onClick={() => setFormData({ ...formData, type })}
                   style={{
-                    padding: '10px 18px', borderRadius: '12px', border: '2px solid', fontSize: '15px', fontWeight: 'bold',
+                    padding: '8px 16px', borderRadius: '10px', border: '2px solid', fontSize: '14px', fontWeight: 'bold',
                     borderColor: formData.type === type ? '#4f46e5' : '#e2e8f0',
                     backgroundColor: formData.type === type ? '#4f46e5' : 'white',
                     color: formData.type === type ? 'white' : '#64748b'
@@ -101,21 +124,22 @@ const EventModal: React.FC<EventModalProps> = ({
             </div>
           </div>
 
-          {/* Fix: Changed justifyBetween to justifyContent as justifyBetween is not a valid React CSS property */}
-          <div style={{background: '#eef2ff', padding: '15px', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', border: '1px solid #c7d2fe'}}>
+          {/* שעת אירוע */}
+          <div style={{background: '#f1f5f9', padding: '16px', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
             <div className="flex items-center gap-2">
               <Clock size={20} style={{color: '#4f46e5'}} />
-              <label style={{fontSize: '16px', fontWeight: 'bold'}}>שעת אירוע:</label>
+              <label style={{fontSize: '15px', fontWeight: 'bold'}}>שעת אירוע:</label>
             </div>
             <input
               type="time"
-              style={{padding: '8px 12px', background: 'white', border: '1px solid #c7d2fe', borderRadius: '10px', fontSize: '18px', fontWeight: 'bold'}}
+              style={{padding: '8px 12px', background: 'white', border: '1px solid #cbd5e1', borderRadius: '10px', fontSize: '18px', fontWeight: 'bold'}}
               value={formData.eventTime}
               onChange={(e) => setFormData({ ...formData, eventTime: e.target.value })}
             />
           </div>
 
-          <div className="flex flex-col gap-4">
+          {/* שדות קלט (שם, מקום וכו') - תיקון הפריסה */}
+          <div style={{display: 'flex', flexDirection: 'column', gap: '12px'}}>
             {visibleFields.map((field) => {
               const Icon = IconMap[field.iconName] || HelpCircle;
               return (
@@ -133,11 +157,11 @@ const EventModal: React.FC<EventModalProps> = ({
             })}
           </div>
 
-          <div style={{paddingTop: '15px', borderTop: '1px solid #eee', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px'}}>
+          <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px'}}>
             <div className="flex flex-col">
-              <label style={{fontSize: '13px', fontWeight: 'bold', color: '#64748b', marginBottom: '6px'}}>תזכורת:</label>
+              <label style={{fontSize: '12px', fontWeight: 'bold', color: '#64748b', marginBottom: '6px'}}>תזכורת:</label>
               <select
-                style={{width: '100%', padding: '12px', background: '#f8fafc', border: '2px solid #e2e8f0', borderRadius: '12px', fontSize: '15px'}}
+                style={{width: '100%', padding: '12px', background: '#f8fafc', border: '2px solid #e2e8f0', borderRadius: '12px', fontSize: '14px'}}
                 value={formData.reminderMinutes || 0}
                 onChange={(e) => setFormData({ ...formData, reminderMinutes: parseInt(e.target.value) })}
               >
@@ -147,10 +171,10 @@ const EventModal: React.FC<EventModalProps> = ({
 
             {(formData.reminderMinutes !== 0 && !isRelative) && (
               <div className="flex flex-col">
-                <label style={{fontSize: '13px', fontWeight: 'bold', color: '#64748b', marginBottom: '6px'}}>שעת התראה:</label>
+                <label style={{fontSize: '12px', fontWeight: 'bold', color: '#64748b', marginBottom: '6px'}}>שעת התראה:</label>
                 <input
                   type="time"
-                  style={{width: '100%', padding: '12px', background: '#f8fafc', border: '2px solid #e2e8f0', borderRadius: '12px', fontSize: '15px'}}
+                  style={{width: '100%', padding: '12px', background: '#f8fafc', border: '2px solid #e2e8f0', borderRadius: '12px', fontSize: '14px'}}
                   value={formData.reminderTime}
                   onChange={(e) => setFormData({ ...formData, reminderTime: e.target.value })}
                 />
@@ -158,12 +182,12 @@ const EventModal: React.FC<EventModalProps> = ({
             )}
           </div>
 
-          <div className="flex flex-col gap-3" style={{marginTop: '20px'}}>
-            <div className="flex gap-3">
-              <button type="submit" style={{flex: 2, background: '#4f46e5', color: 'white', padding: '18px', borderRadius: '16px', fontWeight: '900', border: 'none', fontSize: '18px', boxShadow: '0 4px 12px rgba(79, 70, 229, 0.3)'}}>
+          <div className="flex flex-col gap-3" style={{marginTop: '10px'}}>
+            <div className="flex gap-2">
+              <button type="submit" style={{flex: 1, background: '#4f46e5', color: 'white', padding: '16px', borderRadius: '16px', fontWeight: '900', fontSize: '16px', boxShadow: '0 4px 12px rgba(79, 70, 229, 0.3)'}}>
                 שמירת אירוע
               </button>
-              <button type="button" onClick={onClose} style={{flex: 1, background: '#f1f5f9', color: '#475569', padding: '18px', borderRadius: '16px', fontWeight: 'bold', border: '2px solid #e2e8f0', fontSize: '18px'}}>
+              <button type="button" onClick={onClose} style={{padding: '16px 24px', background: '#f1f5f9', color: '#475569', borderRadius: '16px', fontWeight: 'bold', border: '1px solid #e2e8f0', fontSize: '16px'}}>
                 ביטול
               </button>
             </div>
@@ -182,11 +206,11 @@ const EventModal: React.FC<EventModalProps> = ({
                 style={{
                   background: isConfirmingDelete ? '#dc2626' : 'transparent',
                   color: isConfirmingDelete ? 'white' : '#dc2626',
-                  border: '2px solid #fee2e2', padding: '12px', borderRadius: '16px', fontSize: '14px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
+                  border: '2px solid #fee2e2', padding: '12px', borderRadius: '16px', fontSize: '13px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
                 }}
               >
-                <Trash2 size={18} />
-                {isConfirmingDelete ? 'לחץ שוב למחיקה סופית' : 'מחיקת אירוע'}
+                <Trash2 size={16} />
+                {isConfirmingDelete ? 'לחץ שוב למחיקה' : 'מחיקה'}
               </button>
             )}
           </div>
