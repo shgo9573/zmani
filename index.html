@@ -12,6 +12,10 @@
       * {
         -webkit-tap-highlight-color: transparent;
         box-sizing: border-box;
+        /* מניעה מוחלטת של הגדלת טקסט אוטומטית */
+        -webkit-text-size-adjust: none !important;
+        -moz-text-size-adjust: none !important;
+        text-size-adjust: none !important;
       }
       html, body {
         height: 100%;
@@ -22,10 +26,7 @@
         position: fixed;
         background-color: #f8fafc;
         font-family: system-ui, -apple-system, sans-serif;
-        /* מונע מהדפדפן להגדיל טקסטים בצורה אוטומטית */
-        -webkit-text-size-adjust: 100%;
-        -moz-text-size-adjust: 100%;
-        text-size-adjust: 100%;
+        font-size: 12px; /* בסיס קטן יותר */
       }
       #root { 
         height: 100vh;
@@ -35,48 +36,38 @@
         flex-direction: column; 
         overflow: hidden;
       }
-      /* הגדרות קשיחות ללוח השנה למקרה ש-Tailwind לא נטען */
       .calendar-grid {
         display: grid !important;
         grid-template-columns: repeat(7, 1fr) !important;
         width: 100% !important;
-        max-width: 100% !important;
       }
       .date-cell {
-        min-height: 48px;
         position: relative;
         touch-action: manipulation;
         overflow: hidden;
-        border: 0.5px solid #e2e8f0;
+        border: 0.2px solid #e2e8f0;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        padding: 1px !important;
       }
-      /* עיצוב כפתורי ניווט גדולים */
       .nav-btn {
-        width: 44px;
-        height: 44px;
+        width: 32px !important;
+        height: 32px !important;
         display: flex;
         align-items: center;
         justify-content: center;
-        background: rgba(255,255,255,0.15);
-        border-radius: 12px;
-        touch-action: manipulation;
+        background: rgba(255,255,255,0.1);
+        border-radius: 6px;
+        flex-shrink: 0;
       }
-      h2 { font-size: 1.1rem !important; margin: 0; }
-      input, select, textarea {
-        font-size: 16px !important;
-      }
+      /* אופטימיזציה למסך 2.8 אינץ' */
+      h1 { font-size: 11px !important; }
+      h2 { font-size: 13px !important; }
+      .text-xs { font-size: 9px !important; }
+      .text-sm { font-size: 11px !important; }
     </style>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            screens: {
-              'xs': '320px',
-            },
-          },
-        },
-      }
-    </script>
     <script type="importmap">
     {
       "imports": {

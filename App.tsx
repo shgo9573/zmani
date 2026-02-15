@@ -27,11 +27,7 @@ const App: React.FC = () => {
   const [settings, setSettings] = useState<AppSettings>(() => {
     try {
       const saved = localStorage.getItem('hebrew_calendar_settings_v4');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (!parsed.mutedEventTypes) parsed.mutedEventTypes = [];
-        return parsed;
-      }
+      if (saved) return JSON.parse(saved);
     } catch (e) {}
     
     const initialTypes = ['חתונה', 'אירוסין', 'בר מצווה'];
@@ -44,8 +40,6 @@ const App: React.FC = () => {
       eventFields: [
         { id: 'main_name', label: 'שם בעל השמחה', iconName: 'User', enabledFor: initialTypes },
         { id: 'location', label: 'אולם / מיקום', iconName: 'MapPin', enabledFor: initialTypes },
-        { id: 'singer', label: 'זמר', iconName: 'Music', enabledFor: ['חתונה', 'אירוסין'] },
-        { id: 'keyboardist', label: 'קלידן', iconName: 'Music', enabledFor: ['חתונה'] },
         { id: 'notes', label: 'הערות', iconName: 'Info', enabledFor: initialTypes }
       ]
     };
@@ -85,11 +79,12 @@ const App: React.FC = () => {
   const themeColorKey = settings.themeColor || 'indigo';
 
   return (
-    <div className="h-screen w-full bg-slate-50 flex flex-col overflow-hidden max-w-full">
-      <header className="w-full bg-white border-b border-slate-100 px-3 flex items-center justify-between z-40 shrink-0 h-11">
-        <div className="flex items-center gap-1.5 overflow-hidden">
-          <Calendar size={16} className={`text-${themeColorKey}-600 shrink-0`} />
-          <h1 className="text-sm font-black text-slate-800 truncate">לוח אירועים</h1>
+    <div className="h-screen w-full bg-slate-50 flex flex-col overflow-hidden">
+      {/* Header קטנטן */}
+      <header className="w-full bg-white border-b border-slate-100 px-2 flex items-center justify-between shrink-0 h-8">
+        <div className="flex items-center gap-1 overflow-hidden">
+          <Calendar size={12} className={`text-${themeColorKey}-600`} />
+          <h1 className="text-[11px] font-black text-slate-800 truncate">לוח אירועים</h1>
         </div>
         <button 
           onClick={() => {
@@ -97,26 +92,27 @@ const App: React.FC = () => {
             setEditingEvent({ eventTime: '19:30', reminderMinutes: settings.defaultReminderMinutes, reminderTime: '09:00', type: settings.eventTypes[0], details: {} });
             setIsModalOpen(true);
           }}
-          className={`w-8 h-8 bg-${themeColorKey}-600 text-white rounded-lg flex items-center justify-center active:scale-90 transition-transform`}
+          className={`w-6 h-6 bg-${themeColorKey}-600 text-white rounded flex items-center justify-center`}
         >
-          <Plus size={18} />
+          <Plus size={14} />
         </button>
       </header>
 
       <main className="flex-1 overflow-hidden relative">
-        <div className="absolute inset-0 overflow-y-auto overflow-x-hidden">
+        <div className="absolute inset-0">
           {activeView === 'today' && <TodayView date={viewingDate} events={events.filter(e => e.date === getTodayStr(viewingDate))} onEventClick={(e) => { setSelectedDate(e.date); setEditingEvent(e); setIsModalOpen(true); }} onAddEvent={() => setIsModalOpen(true)} onDateChange={setViewingDate} settings={settings} />}
           {activeView === 'calendar' && <CalendarView events={events} onDateSelect={(d) => { setViewingDate(new Date(d)); setActiveView('today'); }} onAddEvent={(d) => { setSelectedDate(d); setEditingEvent({ eventTime: '19:30', reminderMinutes: settings.defaultReminderMinutes, reminderTime: '09:00', type: settings.eventTypes[0], details: {} }); setIsModalOpen(true); }} settings={settings} />}
           {activeView === 'list' && <EventsListView events={events} onEventClick={(e) => { setSelectedDate(e.date); setEditingEvent(e); setIsModalOpen(true); }} settings={settings} />}
-          {activeView === 'settings' && <div className="p-2"><SettingsView settings={settings} onUpdateSettings={setSettings} onImportData={setEvents} onClearData={() => setEvents([])} /></div>}
+          {activeView === 'settings' && <div className="p-2 h-full overflow-y-auto"><SettingsView settings={settings} onUpdateSettings={setSettings} onImportData={setEvents} onClearData={() => setEvents([])} /></div>}
         </div>
       </main>
 
-      <nav className="bg-white border-t border-slate-100 py-0.5 flex justify-around items-center z-50 shrink-0 h-14 pb-safe">
-        <NavButton active={activeView === 'today'} onClick={() => { setViewingDate(new Date()); setActiveView('today'); }} icon={<Home size={20} />} label="היום" themeColorKey={themeColorKey} />
-        <NavButton active={activeView === 'calendar'} onClick={() => setActiveView('calendar')} icon={<Calendar size={20} />} label="לוח" themeColorKey={themeColorKey} />
-        <NavButton active={activeView === 'list'} onClick={() => setActiveView('list')} icon={<List size={20} />} label="רשימה" themeColorKey={themeColorKey} />
-        <NavButton active={activeView === 'settings'} onClick={() => setActiveView('settings')} icon={<Settings size={20} />} label="הגדרות" themeColorKey={themeColorKey} />
+      {/* Nav קטנטן */}
+      <nav className="bg-white border-t border-slate-100 flex justify-around items-center shrink-0 h-10">
+        <NavButton active={activeView === 'today'} onClick={() => { setViewingDate(new Date()); setActiveView('today'); }} icon={<Home size={16} />} label="היום" themeColorKey={themeColorKey} />
+        <NavButton active={activeView === 'calendar'} onClick={() => setActiveView('calendar')} icon={<Calendar size={16} />} label="לוח" themeColorKey={themeColorKey} />
+        <NavButton active={activeView === 'list'} onClick={() => setActiveView('list')} icon={<List size={16} />} label="רשימה" themeColorKey={themeColorKey} />
+        <NavButton active={activeView === 'settings'} onClick={() => setActiveView('settings')} icon={<Settings size={16} />} label="הגדרות" themeColorKey={themeColorKey} />
       </nav>
 
       <EventModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSave={handleSaveEvent} onDelete={handleDeleteEvent} initialEvent={editingEvent} selectedDate={selectedDate} settings={settings} />
@@ -125,9 +121,9 @@ const App: React.FC = () => {
 };
 
 const NavButton = ({ active, onClick, icon, label, themeColorKey }: any) => (
-  <button onClick={onClick} className={`flex-1 flex flex-col items-center justify-center gap-0.5 ${active ? `text-${themeColorKey}-600` : 'text-slate-400'}`}>
+  <button onClick={onClick} className={`flex-1 flex flex-col items-center justify-center ${active ? `text-${themeColorKey}-600` : 'text-slate-400'}`}>
     {icon}
-    <span className="text-[10px] font-black leading-none">{label}</span>
+    <span className="text-[8px] font-black">{label}</span>
   </button>
 );
 
