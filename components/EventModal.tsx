@@ -26,7 +26,7 @@ const EventModal: React.FC<EventModalProps> = ({
   const [formData, setFormData] = useState<Partial<CalendarEvent>>({
     type: settings.eventTypes[0],
     details: {},
-    eventTime: '19:30', // שעה טיפוסית לחופה
+    eventTime: '19:30', 
     reminderMinutes: settings.defaultReminderMinutes,
     reminderTime: '09:00',
     customReminderDate: ''
@@ -65,7 +65,6 @@ const EventModal: React.FC<EventModalProps> = ({
     } as CalendarEvent);
   };
 
-  // בדיקה האם מדובר בתזכורת יחסית לשעה (דקות/שעות לפני)
   const isRelativeReminder = formData.reminderMinutes && [15, 60, 120].includes(formData.reminderMinutes);
 
   return (
@@ -112,7 +111,6 @@ const EventModal: React.FC<EventModalProps> = ({
                 onChange={(e) => setFormData({ ...formData, eventTime: e.target.value })}
               />
             </div>
-            <p className="text-[10px] text-indigo-400 mt-1 font-bold">התראות כמו "שעה לפני" יחושבו לפי זמן זה</p>
           </div>
 
           {/* שדות דינמיים */}
@@ -163,6 +161,22 @@ const EventModal: React.FC<EventModalProps> = ({
                     className="w-full pr-10 pl-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-bold"
                     value={formData.reminderTime}
                     onChange={(e) => setFormData({ ...formData, reminderTime: e.target.value })}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* תאריך מותאם אישית */}
+            {formData.reminderMinutes === -1 && (
+              <div className="col-span-1 sm:col-span-2 space-y-1 animate-in fade-in zoom-in duration-200">
+                <label className="text-xs font-black text-slate-500 px-1">תאריך לתזכורת</label>
+                <div className="relative">
+                  <CalendarIcon className="absolute right-3 top-3 text-slate-400" size={18} />
+                  <input
+                    type="date"
+                    className="w-full pr-10 pl-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-bold"
+                    value={formData.customReminderDate}
+                    onChange={(e) => setFormData({ ...formData, customReminderDate: e.target.value })}
                   />
                 </div>
               </div>

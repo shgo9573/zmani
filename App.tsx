@@ -138,6 +138,13 @@ const App: React.FC = () => {
     setIsModalOpen(false);
   };
 
+  const handleClearData = () => {
+    if (window.confirm('האם אתה בטוח שברצונך למחוק את כל האירועים? פעולה זו אינה ניתנת לביטול.')) {
+      setEvents([]);
+      localStorage.removeItem('hebrew_events_calendar_events_v2');
+    }
+  };
+
   const themeColorKey = settings.themeColor || 'indigo';
 
   return (
@@ -168,7 +175,7 @@ const App: React.FC = () => {
         {activeView === 'today' && <TodayView date={viewingDate} events={events.filter(e => e.date === getTodayStr(viewingDate))} onEventClick={(e) => { setSelectedDate(e.date); setEditingEvent(e); setIsModalOpen(true); }} onAddEvent={() => setIsModalOpen(true)} onDateChange={setViewingDate} settings={settings} />}
         {activeView === 'calendar' && <CalendarView events={events} onDateSelect={(d) => { setViewingDate(new Date(d)); setActiveView('today'); }} onAddEvent={(d) => { setSelectedDate(d); setEditingEvent({ eventTime: '19:30', reminderMinutes: settings.defaultReminderMinutes, reminderTime: '09:00', type: settings.eventTypes[0], details: {} }); setIsModalOpen(true); }} settings={settings} />}
         {activeView === 'list' && <EventsListView events={events} onEventClick={(e) => { setSelectedDate(e.date); setEditingEvent(e); setIsModalOpen(true); }} settings={settings} />}
-        {activeView === 'settings' && <SettingsView settings={settings} onUpdateSettings={setSettings} onImportData={setEvents} onClearData={() => confirm('למחוק הכל?') && setEvents([])} />}
+        {activeView === 'settings' && <SettingsView settings={settings} onUpdateSettings={setSettings} onImportData={setEvents} onClearData={handleClearData} />}
       </main>
 
       <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[512px] bg-white border-t border-slate-100 p-3 flex justify-around items-center z-50 rounded-t-3xl shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
