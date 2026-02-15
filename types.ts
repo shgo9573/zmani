@@ -10,7 +10,9 @@ export interface CalendarEvent {
   date: string;
   type: string;
   details: Record<string, string>;
+  eventTime: string; // שעת האירוע / חופה (HH:mm)
   reminderMinutes: number;
+  reminderTime?: string; // שעת התראה עבור תזכורות יום/שבוע לפני (HH:mm)
   customReminderDate?: string; // תאריך תזכורת ספציפי (YYYY-MM-DD)
 }
 
@@ -24,7 +26,6 @@ export interface AppSettings {
 
 export type ViewType = 'calendar' | 'today' | 'list' | 'settings';
 
-// Fix: Added ZmanimData interface required by zmanimUtils.ts
 export interface ZmanimData {
   alotHashachar: string;
   misheyakir: string;

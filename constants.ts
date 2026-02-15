@@ -6,10 +6,10 @@ export const DEFAULT_LOCATION = {
 
 export const REMINDER_OPTIONS = [
   { label: 'ללא תזכורת', value: 0 },
-  { label: '15 דקות לפני', value: 15 },
-  { label: 'שעה לפני', value: 60 },
-  { label: 'שעתיים לפני', value: 120 },
-  { label: 'יום לפני', value: 1440 },
-  { label: 'שבוע לפני', value: 10080 },
+  { label: '15 דקות לפני החופה', value: 15 },
+  { label: 'שעה לפני החופה', value: 60 },
+  { label: 'שעתיים לפני החופה', value: 120 },
+  { label: 'יום לפני האירוע', value: 1440 },
+  { label: 'שבוע לפני האירוע', value: 10080 },
   { label: 'תאריך מותאם אישית...', value: -1 }
 ];

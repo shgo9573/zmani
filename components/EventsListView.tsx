@@ -71,13 +71,14 @@ const EventsListView: React.FC<EventsListViewProps> = ({ events, onEventClick, s
                 </div>
               </div>
               <div className="flex flex-wrap gap-4 text-sm text-slate-500">
-                 {settings.eventFields.slice(1, 3).map(field => {
+                 {settings.eventFields.slice(1).map(field => {
                     const val = event.details[field.id];
                     if (!val) return null;
                     const Icon = IconMap[field.iconName] || HelpCircle;
                     return (
                       <div key={field.id} className="flex items-center gap-1">
                         <Icon size={14} className="text-slate-400" />
+                        <span className="font-bold">{field.label}:</span>
                         <span className="max-w-[120px] truncate">{val}</span>
                       </div>
                     );

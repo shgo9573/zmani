@@ -2,7 +2,7 @@
 import React from 'react';
 import { 
   Calendar, MapPin, Music, Bell, Star, 
-  Plus, ChevronRight, ChevronLeft, User, Info, HelpCircle
+  Plus, ChevronRight, ChevronLeft, User, Info, HelpCircle, Clock
 } from 'lucide-react';
 import { CalendarEvent, AppSettings } from '../types';
 import { getHebrewDateInfo } from '../utils/hebrewDateUtils';
@@ -69,20 +69,30 @@ const TodayView: React.FC<TodayViewProps> = ({
           <div className="space-y-4">
             {events.map((event) => (
               <div key={event.id} onClick={() => onEventClick(event)} className="bg-white p-5 rounded-2xl border-2 border-slate-100 hover:border-indigo-400 cursor-pointer shadow-sm hover:shadow-md transition-all">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="bg-indigo-100 text-indigo-700 border border-indigo-200 px-3 py-1 rounded-full text-xs font-bold">
-                    {event.type}
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <div className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-[10px] font-black uppercase">
+                      {event.type}
+                    </div>
+                    {event.eventTime && (
+                      <div className="flex items-center gap-1 text-indigo-600 font-black text-[10px]">
+                        <Clock size={12} /> {event.eventTime}
+                      </div>
+                    )}
                   </div>
                   {event.reminderMinutes > 0 && <Bell size={16} className="text-amber-500 fill-amber-500" />}
                 </div>
                 <h4 className="text-2xl font-black text-slate-900 mb-3">{getPrimaryDetail(event)}</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-4 text-sm text-slate-600">
-                  {settings.eventFields.slice(1, 3).map(field => {
+                  {settings.eventFields.slice(1).map(field => {
+                    const val = event.details[field.id];
+                    if (!val) return null;
                     const Icon = IconMap[field.iconName] || HelpCircle;
                     return (
                       <div key={field.id} className="flex items-center gap-2">
                         <Icon size={16} className="text-slate-400 shrink-0" />
-                        <span className="truncate">{event.details[field.id] || `ללא ${field.label}`}</span>
+                        <span className="truncate font-bold">{field.label}:</span>
+                        <span className="truncate">{val}</span>
                       </div>
                     );
                   })}
