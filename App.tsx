@@ -29,7 +29,6 @@ const App: React.FC = () => {
       const saved = localStorage.getItem('hebrew_calendar_settings_v4');
       if (saved) {
         const parsed = JSON.parse(saved);
-        // וודוא קיום השדה החדש במקרה של שדרוג
         if (!parsed.mutedEventTypes) parsed.mutedEventTypes = [];
         return parsed;
       }
@@ -86,11 +85,11 @@ const App: React.FC = () => {
   const themeColorKey = settings.themeColor || 'indigo';
 
   return (
-    <div className="h-screen w-full bg-slate-50 flex flex-col overflow-hidden">
-      <header className="w-full bg-white border-b border-slate-100 px-3 py-1 flex items-center justify-between z-40 shrink-0 h-10">
-        <div className="flex items-center gap-1.5">
-          <Calendar size={14} className={`text-${themeColorKey}-600`} />
-          <h1 className="text-xs font-black text-slate-800">לוח אירועים</h1>
+    <div className="h-screen w-full bg-slate-50 flex flex-col overflow-hidden max-w-full">
+      <header className="w-full bg-white border-b border-slate-100 px-3 flex items-center justify-between z-40 shrink-0 h-11">
+        <div className="flex items-center gap-1.5 overflow-hidden">
+          <Calendar size={16} className={`text-${themeColorKey}-600 shrink-0`} />
+          <h1 className="text-sm font-black text-slate-800 truncate">לוח אירועים</h1>
         </div>
         <button 
           onClick={() => {
@@ -98,24 +97,26 @@ const App: React.FC = () => {
             setEditingEvent({ eventTime: '19:30', reminderMinutes: settings.defaultReminderMinutes, reminderTime: '09:00', type: settings.eventTypes[0], details: {} });
             setIsModalOpen(true);
           }}
-          className={`w-7 h-7 bg-${themeColorKey}-600 text-white rounded flex items-center justify-center active:scale-90`}
+          className={`w-8 h-8 bg-${themeColorKey}-600 text-white rounded-lg flex items-center justify-center active:scale-90 transition-transform`}
         >
-          <Plus size={16} />
+          <Plus size={18} />
         </button>
       </header>
 
-      <main className="flex-1 overflow-y-auto">
-        {activeView === 'today' && <TodayView date={viewingDate} events={events.filter(e => e.date === getTodayStr(viewingDate))} onEventClick={(e) => { setSelectedDate(e.date); setEditingEvent(e); setIsModalOpen(true); }} onAddEvent={() => setIsModalOpen(true)} onDateChange={setViewingDate} settings={settings} />}
-        {activeView === 'calendar' && <CalendarView events={events} onDateSelect={(d) => { setViewingDate(new Date(d)); setActiveView('today'); }} onAddEvent={(d) => { setSelectedDate(d); setEditingEvent({ eventTime: '19:30', reminderMinutes: settings.defaultReminderMinutes, reminderTime: '09:00', type: settings.eventTypes[0], details: {} }); setIsModalOpen(true); }} settings={settings} />}
-        {activeView === 'list' && <EventsListView events={events} onEventClick={(e) => { setSelectedDate(e.date); setEditingEvent(e); setIsModalOpen(true); }} settings={settings} />}
-        {activeView === 'settings' && <div className="p-2"><SettingsView settings={settings} onUpdateSettings={setSettings} onImportData={setEvents} onClearData={() => setEvents([])} /></div>}
+      <main className="flex-1 overflow-hidden relative">
+        <div className="absolute inset-0 overflow-y-auto overflow-x-hidden">
+          {activeView === 'today' && <TodayView date={viewingDate} events={events.filter(e => e.date === getTodayStr(viewingDate))} onEventClick={(e) => { setSelectedDate(e.date); setEditingEvent(e); setIsModalOpen(true); }} onAddEvent={() => setIsModalOpen(true)} onDateChange={setViewingDate} settings={settings} />}
+          {activeView === 'calendar' && <CalendarView events={events} onDateSelect={(d) => { setViewingDate(new Date(d)); setActiveView('today'); }} onAddEvent={(d) => { setSelectedDate(d); setEditingEvent({ eventTime: '19:30', reminderMinutes: settings.defaultReminderMinutes, reminderTime: '09:00', type: settings.eventTypes[0], details: {} }); setIsModalOpen(true); }} settings={settings} />}
+          {activeView === 'list' && <EventsListView events={events} onEventClick={(e) => { setSelectedDate(e.date); setEditingEvent(e); setIsModalOpen(true); }} settings={settings} />}
+          {activeView === 'settings' && <div className="p-2"><SettingsView settings={settings} onUpdateSettings={setSettings} onImportData={setEvents} onClearData={() => setEvents([])} /></div>}
+        </div>
       </main>
 
-      <nav className="bg-white border-t border-slate-100 py-0.5 flex justify-around items-center z-50 shrink-0 h-11">
-        <NavButton active={activeView === 'today'} onClick={() => { setViewingDate(new Date()); setActiveView('today'); }} icon={<Home size={16} />} label="היום" themeColorKey={themeColorKey} />
-        <NavButton active={activeView === 'calendar'} onClick={() => setActiveView('calendar')} icon={<Calendar size={16} />} label="לוח" themeColorKey={themeColorKey} />
-        <NavButton active={activeView === 'list'} onClick={() => setActiveView('list')} icon={<List size={16} />} label="רשימה" themeColorKey={themeColorKey} />
-        <NavButton active={activeView === 'settings'} onClick={() => setActiveView('settings')} icon={<Settings size={16} />} label="הגדרות" themeColorKey={themeColorKey} />
+      <nav className="bg-white border-t border-slate-100 py-0.5 flex justify-around items-center z-50 shrink-0 h-14 pb-safe">
+        <NavButton active={activeView === 'today'} onClick={() => { setViewingDate(new Date()); setActiveView('today'); }} icon={<Home size={20} />} label="היום" themeColorKey={themeColorKey} />
+        <NavButton active={activeView === 'calendar'} onClick={() => setActiveView('calendar')} icon={<Calendar size={20} />} label="לוח" themeColorKey={themeColorKey} />
+        <NavButton active={activeView === 'list'} onClick={() => setActiveView('list')} icon={<List size={20} />} label="רשימה" themeColorKey={themeColorKey} />
+        <NavButton active={activeView === 'settings'} onClick={() => setActiveView('settings')} icon={<Settings size={20} />} label="הגדרות" themeColorKey={themeColorKey} />
       </nav>
 
       <EventModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSave={handleSaveEvent} onDelete={handleDeleteEvent} initialEvent={editingEvent} selectedDate={selectedDate} settings={settings} />
@@ -124,9 +125,9 @@ const App: React.FC = () => {
 };
 
 const NavButton = ({ active, onClick, icon, label, themeColorKey }: any) => (
-  <button onClick={onClick} className={`flex-1 flex flex-col items-center justify-center ${active ? `text-${themeColorKey}-600` : 'text-slate-400'}`}>
+  <button onClick={onClick} className={`flex-1 flex flex-col items-center justify-center gap-0.5 ${active ? `text-${themeColorKey}-600` : 'text-slate-400'}`}>
     {icon}
-    <span className="text-[9px] font-black">{label}</span>
+    <span className="text-[10px] font-black leading-none">{label}</span>
   </button>
 );
 

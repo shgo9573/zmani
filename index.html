@@ -6,6 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>לוח אירועים עברי</title>
     <style>
+      :root {
+        --app-height: 100%;
+      }
       * {
         -webkit-tap-highlight-color: transparent;
         -webkit-touch-callout: none !important;
@@ -13,36 +16,61 @@
         user-select: none !important;
         box-sizing: border-box;
       }
-      body {
-        font-family: system-ui, -apple-system, sans-serif;
-        background-color: #f8fafc;
+      html, body {
+        height: 100%;
+        width: 100%;
         margin: 0;
         padding: 0;
-        direction: rtl;
         overflow: hidden;
+        position: fixed;
+        background-color: #f8fafc;
+        font-family: system-ui, -apple-system, sans-serif;
+        -webkit-text-size-adjust: 100%;
       }
       #root { 
-        height: 100vh; 
+        height: 100vh;
+        height: -webkit-fill-available;
+        width: 100vw;
         display: flex; 
         flex-direction: column; 
+        overflow: hidden;
       }
       .calendar-grid {
         display: grid !important;
         grid-template-columns: repeat(7, 1fr) !important;
         width: 100% !important;
+        max-width: 100% !important;
       }
       .date-cell {
-        min-height: 44px; /* גובה חסכוני */
+        min-height: 44px;
         position: relative;
-        touch-action: none; /* מונע גלילה בזמן לחיצה על התא */
+        touch-action: pan-y;
+        overflow: hidden;
       }
-      /* מניעת בחירה בטפסים */
       input, select, textarea {
         -webkit-user-select: auto !important;
         user-select: auto !important;
+        font-size: 16px !important; /* מונע זום באייפון */
+      }
+      /* מניעת קפיצות של פונטים גדולים מדי */
+      h1, h2, h3 {
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
     </style>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            screens: {
+              'xs': '320px',
+            },
+          },
+        },
+      }
+    </script>
     <script type="importmap">
     {
       "imports": {
